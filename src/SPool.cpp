@@ -22,6 +22,7 @@ Schedule* dequeueSchedule(SPool* pool, bool& isSuccess) {
 
   Schedule* dequeued = new Schedule(*(pool->schedules[0]));
 
+  // PERF: O(n)
   for (unsigned int i = 1; i < pool->count; ++i) {
     pool->schedules[i - 1] = pool->schedules[i];
   }

@@ -21,6 +21,7 @@ unsigned int dequeueHour(Schedule *schedule, bool& isSuccess) {
 
   unsigned int dequeuedHour = schedule->hours[0];
 
+  // PERF: O(n)
   for (unsigned int i = 1; i < schedule->count; ++i) {
     schedule->hours[i - 1] = schedule->hours[i];
   }

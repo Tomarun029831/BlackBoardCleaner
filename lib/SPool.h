@@ -11,6 +11,6 @@ struct SPool {
 };
 
 bool queueSchedule(Schedule* schedule, SPool* pool);
-Schedule* dequeueSchedule(SPool* pool, bool& isSuccess);
+Schedule* dequeueSchedule(SPool* pool, bool& isSuccess); // PERF: O(n)
 
 #endif
