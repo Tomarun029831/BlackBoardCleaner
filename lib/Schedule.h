@@ -4,7 +4,7 @@
 struct Schedule {
   Schedule(const unsigned char cmd='-', unsigned int *const hours=nullptr, const unsigned int count=0);
 
-  unsigned char cmd;
+  char cmd;
   unsigned int* hours;
   unsigned int count;
 };
