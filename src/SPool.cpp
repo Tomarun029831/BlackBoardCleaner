@@ -36,3 +36,20 @@ Schedule* dequeueSchedule(SPool* pool, bool& isSuccess) {
   isSuccess = true;
   return dequeued;
 }
+
+void freeSPool(SPool* pool) {
+    if (pool == nullptr) return;
+
+    if (pool->schedules != nullptr) {
+        for(Schedule **it = pool->schedules; it != pool->schedules + pool->count; ++it){
+            if(*it != nullptr) free(*it);
+        }
+
+        free(pool->schedules);
+        pool->schedules = nullptr;
+    }
+
+    pool->count = 0; // TODO: unnecesary?
+    free(pool);
+    pool = nullptr;
+}
