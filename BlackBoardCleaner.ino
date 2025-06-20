@@ -175,24 +175,24 @@ public:
     }
 
     // devide the string with ';' to extract kicHeader
-    int sepIndex = kic->indexOf(';');
-    String kicHeader = kic->substring(0, sepIndex);
-    kic += sepIndex; // move kic pointer to next head of the block
+    unsigned int begin = 0;
+    String kicHeader = kic->substring(begin, kic->indexOf(';', begin));
+    // kic += begin; // move kic pointer to next head of the block
 
     // devide the string with ';' to extract timeToSyc
-    sepIndex = kic->indexOf(';');
-    unsigned int timeToSyc = kic->substring(0, sepIndex).toInt(); // HACK: type diff(unsigned int vs long)
-    kic += sepIndex; // move kic pointer to next head of the block
+    begin = kic->indexOf(';', begin+1) + 1;
+    unsigned int timeToSyc = kic->substring(begin, kic->indexOf(';', begin)).toInt(); // HACK: type diff(unsigned int vs long)
+    // kic += begin; // move kic pointer to next head of the block
 
     // start loop to extract each schedule with ';'
     unsigned int newCount = 0;
     Schedule *newSchedules = nullptr;
     while (true) {
-      if (!kic->compareTo("/")) { // 0: if String equals myString2
+      if (!kic->compareTo(kic->substring(begin))) { // 0: if String equals myString2
         break;
       }
-      sepIndex = kic->indexOf(';');
-      String scheduleBlock=kic->substring(0, sepIndex);
+      begin = kic->indexOf(';', begin+1) + 1;
+      String scheduleBlock=kic->substring(begin, kic->indexOf(';', begin));
       Schedule *schedule=convertToSchedule(&scheduleBlock);
       queueSchedule(schedule, pool);
     }
