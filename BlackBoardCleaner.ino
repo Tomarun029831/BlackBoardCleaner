@@ -1,9 +1,7 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <WString.h>
-#include <stdlib.h>
-#include "lib/Schedule.h"
-#include "lib/SPool.h"
+#include "lib/KIC.h"
 
 // COM9    serial   Serial Port (USB) Arduino Mega or Mega 2560 arduino:avr:mega arduino:avr
 
@@ -162,103 +160,6 @@ class WirelessGateway : public ScheduleGateway{
 ScheduleGateway* gateway;
 #define KIC_END '/'
 
-class KicParser {
-public:
-  static SPool* convertToSPool(String& kic) {
-    SPool* pool = new SPool(nullptr, 0);
-    Serial.print("convertToSPool() called with: ");
-    Serial.println(kic);
-
-    // check '/' at end of the string
-    if (!kic.endsWith("/")) {
-      return nullptr;
-    }
-
-    // devide the string with ';' to extract kicHeader
-    unsigned int begin = 0;
-    String kicHeader = kic.substring(begin, kic.indexOf(';', begin));
-    // kic += begin; // move kic pointer to next head of the block
-
-    // devide the string with ';' to extract timeToSyc
-    begin = kic.indexOf(';', begin+1) + 1;
-    unsigned int timeToSyc = kic.substring(begin, kic.indexOf(';', begin)).toInt(); // HACK: type diff(unsigned int vs long)
-    // kic += begin; // move kic pointer to next head of the block
-
-    // start loop to extract each schedule with ';'
-    unsigned int newCount = 0;
-    Schedule *newSchedules = nullptr;
-    // Serial.print("convertToSPool> header: ");
-    // Serial.println(kicHeader);
-    // Serial.print("convertToSPool> timeHeader: ");
-    // Serial.println(timeToSyc);
-    // Serial.println("convertToSPool> Schedules@");
-    while (true) {
-      if (!kic.substring(begin).compareTo("/")) { // 0: if String equals myString2
-        // Serial.println("@");
-        break;
-      }
-      begin = kic.indexOf(';', begin+1) + 1;
-      String scheduleBlock=kic.substring(begin, kic.indexOf(';', begin));
-      // Serial.print(">> ");
-      // Serial.println(scheduleBlock);
-      Schedule *schedule=convertToSchedule(scheduleBlock);
-      Serial.println("convertToSPool> converted(");
-      Serial.print("cmd=");
-      Serial.println(schedule->cmd);
-      Serial.println("hours@");
-      for(unsigned int i = 0; i < schedule->count; i++){
-        Serial.println(schedule->hours[i]);
-      }
-      Serial.println("@");
-      Serial.print("count=");
-      Serial.println(schedule->count);
-      Serial.println(")");
-
-      queueSchedule(schedule, pool);
-    }
-
-    return pool;
-  }
-
-private:
-  static Schedule* convertToSchedule(const String& block) {
-    Serial.print("convertToSchedule called with: ");
-    Serial.println(block);
-    char cmd = block.charAt(0);
-    Schedule* schedule=new Schedule(cmd, nullptr, 0);
-
-    for (int i = 1; i + 4 <= block.length() + 1; i += 4) {
-      String chunk = block.substring(i, i + 4);
-      Serial.print("convertToSchedule> queueHours call with ");
-      Serial.println(chunk);
-      
-      int hour = atoi(chunk.c_str());
-      queueHours(hour, schedule);
-    }
-
-    // Serial.print("convertToSchedule> cmd=");
-    // Serial.println(schedule->cmd);
-    return schedule;
-  }
-
-
-  // static void parseScheduleBlock(const String& block) {
-  //   if (block.length() < 5) return; // 曜日 + 最低1時刻
-  //   int day = block.substring(0, 1).toInt();
-  //   Serial.print("曜日: ");
-  //   Serial.println(day);
-  //
-  //   String times = block.substring(1);
-  //   for (int i = 0; i + 4 <= times.length(); i += 4) {
-  //     String time = times.substring(i, i + 4);
-  //     Serial.print(" - 時刻: ");
-  //     Serial.println(time);
-  //   }
-  // }
-
-  KicParser() = delete;
-};
-
 static SPool* spool;
 
 void setup() {
@@ -274,7 +175,7 @@ void loop() {
   Serial.print("receivedString: ");
   Serial.println(str);
 
-  spool = KicParser::convertToSPool(str);
+  spool = KIC::convertToSPool(str);
   Serial.println("=== TEST ===");
   for(unsigned int i = 0; i < spool->count; i++){
     Schedule *schedule = *(spool->schedules + i);
@@ -289,6 +190,8 @@ void loop() {
     Serial.println("@");
   }
   Serial.println("=== TEST END ===");
+  freeSPool(spool);
+}
 
 // === TEST ===
 // Schedule 0
@@ -317,4 +220,3 @@ void loop() {
 // hours@
 // @
 // === TEST END ===
-}
