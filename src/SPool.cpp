@@ -7,10 +7,8 @@ bool queueSchedule(Schedule* schedule, SPool* pool) {
   Schedule** newSchedules = (Schedule**)realloc(pool->schedules, (pool->count + 1) * sizeof(Schedule*));
   if (!newSchedules) return false;
 
-  newSchedules[pool->count] = schedule;
-
+  *(newSchedules + pool->count++) = schedule;
   pool->schedules = newSchedules;
-  pool->count++;
   return true;
 }
 

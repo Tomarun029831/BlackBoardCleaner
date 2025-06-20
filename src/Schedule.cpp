@@ -6,10 +6,9 @@ Schedule::Schedule(const unsigned char cmd, unsigned int *const hours, const uns
 bool queueHours(const int hour, Schedule *schedule) {
   unsigned int* newHours = (unsigned int*)realloc(schedule->hours, (schedule->count + 1) * sizeof(unsigned int));
   if (!newHours) return false;
-  *(newHours + schedule->count) = hour;
 
+  *(newHours + schedule->count++) = hour;
   schedule->hours = newHours;
-  schedule->count++;
   return true;
 }
 
