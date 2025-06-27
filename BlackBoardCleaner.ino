@@ -1,11 +1,29 @@
 #include <Arduino.h>
+// #include <esp_http_client.h>
+// #include <esp_wifi.h>
 #include <HardwareSerial.h>
 #include <WString.h>
+// C:\Users\humti\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\libraries
+// #include <WiFi.h>
+// #include <HTTPClient.h>
+
 #include "lib/KIC.h"
+// #include <esp_https_ota.h>
 
 // COM9    serial   Serial Port (USB) Arduino Mega or Mega 2560 arduino:avr:mega arduino:avr
 
+
+/* === esp32 ===
+compile script:
+arduino-cli compile --fqbn esp32:esp32:esp32wroverkit .\BlackBoardCleaner
+*/
+
 /*
+upload script:
+arduino-cli upload -p COM9 --fqbn esp32:esp32:esp32wroverkit .\BlackBoardCleaner
+*/
+
+/* === mega ===
 compile script:
 arduino-cli compile --fqbn arduino:avr:mega .\BlackBoardCleaner
 */
@@ -20,48 +38,6 @@ arduino-cli upload -p COM9 --fqbn arduino:avr:mega .\BlackBoardCleaner
 auto compile and upload:
 arduino-cli compile --fqbn arduino:avr:mega .\BlackBoardCleaner && arduino-cli upload -p COM9 --fqbn arduino:avr:mega .\BlackBoardCleaner && 
 arduino-cli monitor -p COM9 --config baudrate=9600
-*/
-
-
-/*
-typedef struct {
-  POINT **points;
-  unsigned int count;
-} PPOOL;
-
-static void freePool(PPOOL *const pool);
-static int pushPoint(const POINT *point, PPOOL *pool);
-static int isConcluded(const POINT *point, const PPOOL *pool);
-
-static void freePool(PPOOL *const pool) {
-  free(pool->points);
-  pool->points = NULL;
-  pool->count = 0;
-}
-
-static int pushPoint(const POINT *point, PPOOL *pool) {
-  POINT const **new_pool =
-      realloc(pool->points, (pool->count + 1) * sizeof(POINT *));
-  if (!new_pool) {
-    return 0;
-  }
-
-  *(new_pool + pool->count) = point;
-  pool->points = (POINT **)new_pool;
-  pool->count++;
-
-  return 1;
-}
-
-static int isConcluded(const POINT *point, const PPOOL *pool) {
-  for (const POINT *const *it = (const POINT *const *)pool->points;
-       it != (const POINT *const *)pool->points + pool->count; ++it) {
-    if (*it == point) {
-      return 1;
-    }
-  }
-  return 0;
-}
 */
 
 class ScheduleGateway{
@@ -154,69 +130,91 @@ class WirelessGateway : public ScheduleGateway{
     }
 };
 
+// === TEST ===
+class KICProtocolTestCase
+{
+  public:
+    static void testKICParser()
+    {
+      // -- setup --
+      bool testPassed = true;
+
+      Serial.begin(9600);
+      String str = "KIC:V1;1437;1090010001130;208000900;8;9;/";
+      Serial.print("receivedString: ");
+      Serial.println(str);
+
+      SPool* spool = KIC::convertToSPool(str);
+      const char expectedCmds[] = {'1', '2', '8', '9', '/'};
+      const int expectedCounts[] = {3, 2, 0, 0, 0};
+      const int expectedHours[][3] = {
+        {900, 1000, 1130},
+        {800, 900, 0},
+        {0, 0, 0},
+        {0, 0, 0},
+        {0, 0, 0}
+      };
+
+      // -- test --
+      Serial.println("=== TEST ===");
+      for(unsigned int i = 0; i < spool->count; i++){
+        Schedule *schedule = *(spool->schedules + i);
+        // Serial.print("Schedule ");
+        // Serial.println(i);
+        // Serial.print("cmd> ");
+        // Serial.println(schedule->cmd);
+        // Serial.println("hours@");
+
+        // assert cmd
+        if(schedule->cmd != expectedCmds[i]) {
+          testPassed = false;
+          // Serial.print("ERROR: cmd mismatch at schedule ");
+          // Serial.println(i);
+        }
+
+        // assert count
+        if(schedule->count != expectedCounts[i]){
+          testPassed = false;
+          // Serial.print("ERROR: hours count mismatch at schedule ");
+          // Serial.println(i);
+        } else {
+          for(unsigned int j = 0; j < schedule->count; j++){
+            // Serial.print(schedule->hours[j]);
+            // Serial.print(" ");
+            if(schedule->hours[j] != expectedHours[i][j]){
+              testPassed = false;
+              // Serial.print("\nERROR: hour value mismatch at schedule ");
+              // Serial.print(i);
+              // Serial.print(", hour index ");
+              // Serial.println(j);
+            }
+          }
+        }
+        // Serial.println("@");
+      }
+      Serial.println("=== TEST END ===");
+
+      if(testPassed){
+        Serial.println("testKICParser: Test passed");
+      } else {
+        Serial.println("testKICParser: Test failed");
+      }
+
+      // -- teardown --
+      freeSPool(spool);
+    }
+};
+
 //ex) KIC:V1;1437;1090010001130;208000900;8;9;/
 //ex) KIC:V1;1437;1_0900_1000_1130;2_0800_0900;8;9;/
-
 ScheduleGateway* gateway;
 #define KIC_END '/'
 
 static SPool* spool;
 
 void setup() {
-  Serial.begin(9600);
-  pinMode(LED_BUILTIN, OUTPUT);
-  gateway = new SerialGateway();
+  KICProtocolTestCase::testKICParser();
 }
 
 void loop() {
-  clearSerialBuffer();
-  if (gateway->available() <= 0) return;
-  String str = gateway->receiveString();
-  Serial.print("receivedString: ");
-  Serial.println(str);
-
-  spool = KIC::convertToSPool(str);
-  Serial.println("=== TEST ===");
-  for(unsigned int i = 0; i < spool->count; i++){
-    Schedule *schedule = *(spool->schedules + i);
-    Serial.print("Schedule ");
-    Serial.println(i);
-    Serial.print("cmd> ");
-    Serial.println(schedule->cmd);
-    Serial.println("hours@");
-    for(unsigned int j = 0; j < schedule->count; j++){
-      Serial.println(schedule->hours[j]);
-    }
-    Serial.println("@");
-  }
-  Serial.println("=== TEST END ===");
-  freeSPool(spool);
 }
-
-// === TEST ===
-// Schedule 0
-// cmd> 1
-// hours@
-// 900
-// 1000
-// 1130
-// @
-// Schedule 1
-// cmd> 2
-// hours@
-// 800
-// 900
-// @
-// Schedule 2
-// cmd> 8
-// hours@
-// @
-// Schedule 3
-// cmd> 9
-// hours@
-// @
-// Schedule 4
-// cmd> /
-// hours@
-// @
-// === TEST END ===

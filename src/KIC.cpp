@@ -6,8 +6,8 @@ static Schedule* convertToSchedule(const String& block);
 
 SPool* KIC::convertToSPool(String& kic) {
     SPool* pool = new SPool(nullptr, 0);
-    Serial.print("convertToSPool() called with: ");
-    Serial.println(kic);
+    // Serial.print("convertToSPool() called with: ");
+    // Serial.println(kic);
 
     // check '/' at end of the string
     if (!kic.endsWith("/")) {
@@ -42,17 +42,17 @@ SPool* KIC::convertToSPool(String& kic) {
       // Serial.print(">> ");
       // Serial.println(scheduleBlock);
       Schedule *schedule=convertToSchedule(scheduleBlock);
-      Serial.println("convertToSPool> converted(");
-      Serial.print("cmd=");
-      Serial.println(schedule->cmd);
-      Serial.println("hours@");
-      for(unsigned int i = 0; i < schedule->count; i++){
-        Serial.println(schedule->hours[i]);
-      }
-      Serial.println("@");
-      Serial.print("count=");
-      Serial.println(schedule->count);
-      Serial.println(")");
+      // Serial.println("convertToSPool> converted(");
+      // Serial.print("cmd=");
+      // Serial.println(schedule->cmd);
+      // Serial.println("hours@");
+      // for(unsigned int i = 0; i < schedule->count; i++){
+      //   Serial.println(schedule->hours[i]);
+      // }
+      // Serial.println("@");
+      // Serial.print("count=");
+      // Serial.println(schedule->count);
+      // Serial.println(")");
 
       queueSchedule(schedule, pool);
     }
@@ -61,15 +61,15 @@ SPool* KIC::convertToSPool(String& kic) {
   }
 
 static Schedule* convertToSchedule(const String& block) {
-    Serial.print("convertToSchedule called with: ");
-    Serial.println(block);
+    // Serial.print("convertToSchedule called with: ");
+    // Serial.println(block);
     char cmd = block.charAt(0);
     Schedule* schedule=new Schedule(cmd, nullptr, 0); // TODO: new -> malloc
 
     for (int i = 1; i + 4 <= block.length() + 1; i += 4) {
       String chunk = block.substring(i, i + 4);
-      Serial.print("convertToSchedule> queueHours call with ");
-      Serial.println(chunk);
+      // Serial.print("convertToSchedule> queueHours call with ");
+      // Serial.println(chunk);
 
       int hour = atoi(chunk.c_str());
       queueHours(hour, schedule);
