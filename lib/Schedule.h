@@ -1,5 +1,5 @@
-#ifndef SCHEDULE_H
-#define SCHEDULE_H
+#ifndef _SCHEDULE_
+#define _SCHEDULE_
 
 struct Schedule {
   Schedule(const unsigned char cmd='-', unsigned int *const hours=nullptr, const unsigned int count=0);
@@ -12,4 +12,4 @@ struct Schedule {
 bool queueHours(const int hour, Schedule *schedule);
 unsigned int dequeueHour(Schedule *schedule, bool& isSuccess); // PERF: O(n)
 
-#endif
+#endif // !_SCHEDULE_

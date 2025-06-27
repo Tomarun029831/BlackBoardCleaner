@@ -1,30 +1,30 @@
 #include "../lib/KIC.h"
 #include "../lib/SPool.h"
-#include <HardwareSerial.h> // TODO: only for DEBUG
+// #include <HardwareSerial.h> // TODO: only for DEBUG
 
 static Schedule* convertToSchedule(const String& block);
 
 SPool* KIC::convertToSPool(String& kic) {
-    SPool* pool = new SPool(nullptr, 0);
+    SPool* pool = new SPool(nullptr, 0); // TODO: new -> malloc
     // Serial.print("convertToSPool() called with: ");
     // Serial.println(kic);
 
-    // check '/' at end of the string
-    if (!kic.endsWith("/")) {
+    // check KICEND at end of the string
+    if (!kic.endsWith(KICEND)) {
       return nullptr;
     }
 
-    // devide the string with ';' to extract kicHeader
+    // devide the string with KICSEGMENTCHAR to extract kicHeader
     unsigned int begin = 0;
-    String kicHeader = kic.substring(begin, kic.indexOf(';', begin));
+    String kicHeader = kic.substring(begin, kic.indexOf(KICSEGMENTCHAR, begin));
     // kic += begin; // move kic pointer to next head of the block
 
-    // devide the string with ';' to extract timeToSyc
-    begin = kic.indexOf(';', begin+1) + 1;
-    unsigned int timeToSyc = kic.substring(begin, kic.indexOf(';', begin)).toInt(); // HACK: type diff(unsigned int vs long)
+    // devide the string with KICSEGMENTCHAR to extract timeToSyc
+    begin = kic.indexOf(KICSEGMENTCHAR, begin+1) + 1;
+    unsigned int timeToSyc = kic.substring(begin, kic.indexOf(KICSEGMENTCHAR, begin)).toInt(); // HACK: type diff(unsigned int vs long)
     // kic += begin; // move kic pointer to next head of the block
 
-    // start loop to extract each schedule with ';'
+    // start loop to extract each schedule with KICSEGMENTCHAR
     unsigned int newCount = 0;
     Schedule *newSchedules = nullptr;
     // Serial.print("convertToSPool> header: ");
@@ -37,8 +37,8 @@ SPool* KIC::convertToSPool(String& kic) {
         // Serial.println("@");
         break;
       }
-      begin = kic.indexOf(';', begin+1) + 1;
-      String scheduleBlock=kic.substring(begin, kic.indexOf(';', begin));
+      begin = kic.indexOf(KICSEGMENTCHAR, begin+1) + 1;
+      String scheduleBlock=kic.substring(begin, kic.indexOf(KICSEGMENTCHAR, begin));
       // Serial.print(">> ");
       // Serial.println(scheduleBlock);
       Schedule *schedule=convertToSchedule(scheduleBlock);

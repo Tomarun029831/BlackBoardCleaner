@@ -1,5 +1,5 @@
-#ifndef SPOOL_H
-#define SPOOL_H
+#ifndef _SPOOL_
+#define _SPOOL_
 
 #include "./Schedule.h"
 
@@ -14,4 +14,4 @@ bool queueSchedule(Schedule* schedule, SPool* pool);
 Schedule* dequeueSchedule(SPool* pool, bool& isSuccess); // PERF: O(n)
 void freeSPool(SPool* pool);
 
-#endif
+#endif // !_SPOOL_
