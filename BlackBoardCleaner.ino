@@ -116,11 +116,11 @@ class WheelHandler{
 
     }
 
-    static void rightRotate(){
+    static void rightRotate(){ // TODO: args: float dgree
 
     }
 
-    static void leftRotate(){
+    static void leftRotate(){ // TODO: args: float dgree
 
     }
 
@@ -265,7 +265,57 @@ class MotorPinTestCase{
     }
 };
 
-class MotorManualTestCase{ // use your eye to test
+class MotorManualOnFloorTestCase{
+  public:
+    static void testStopMovement()
+    {
+      WheelHandler::stop();
+    }
+
+    static void testFarwardMovement()
+    {
+      WheelHandler::forward();
+    }
+
+    static void testBackwardMovement()
+    {
+      WheelHandler::backward();
+    }
+
+    static void testRightRotation()
+    {
+      WheelHandler::rightRotate();
+    }
+
+    static void testLeftRotation()
+    {
+      WheelHandler::leftRotate();
+    }
+
+    static void runAllTests()
+    {
+      testFarwardMovement();
+      delay(3);
+      testStopMovement();
+      delay(3);
+
+      testBackwardMovement();
+      delay(3);
+      testStopMovement();
+      delay(3);
+
+      testRightRotation();
+      delay(3);
+      testStopMovement();
+      delay(3);
+
+      testLeftRotation();
+      delay(3);
+      testStopMovement();
+    }
+};
+
+class MotorManualOnWallTestCase{
   public:
     static void testStopMovement()
     {
