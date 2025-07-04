@@ -13,6 +13,7 @@
 // === my librarise ===
 #include "lib/KIC.h"
 // #include "lib/ScheduleGataway.h"
+#include "ENV.h"
 
 /* === auto script for esp-wroom-32D ===
 // COM10    serial   Unknown
@@ -377,6 +378,7 @@ class MotorManualOnWallTestCase{
 
     static void runAllTests()
     {
+      Serial.println("=== MotorManualOnWallTest START ===");
       testFarwardMovement();
       delay(3000);
       testStopMovement();
@@ -395,6 +397,7 @@ class MotorManualOnWallTestCase{
       testLeftRotation();
       delay(3000);
       testStopMovement();
+      Serial.println("=== MotorManualOnWallTest START ===");
     }
 };
 
@@ -403,12 +406,65 @@ class WiFiConnectionTestCase
   public:
     static void connect()
     {
-    // HTTPClient http;
-      // ScheduleGateway* gateway = new WirelessGateway();
-      // gateway->setup();
+      Serial.println("[WiFi] Connecting...");
+      WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
+
+      unsigned long startAttemptTime = millis();
+      const unsigned long timeout = 10000; // 10秒以内に接続する
+
+      while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < timeout)
+      {
+        delay(500);
+        Serial.print(".");
+      }
+
+      if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\n[WiFi] Connected!");
+        Serial.print("[WiFi] IP address: ");
+        Serial.println(WiFi.localIP());
+      } else {
+        Serial.println("\n[WiFi] Connection failed.");
+      }
+    }
+
+    static void runAllTests()
+    {
+      Serial.println("=== WiFiConnectionTest START ===");
+      connect();
+      Serial.println("=== WiFiConnectionTest END ===\n");
     }
 };
-//
+
+class HTTPResponseTestCase
+{
+  public:
+    static void runAllTests()
+    {
+      Serial.println("=== HTTPResponseTest START ===");
+
+      if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[HTTP] WiFi not connected. Test aborted.");
+        return;
+      }
+
+      HTTPClient http;
+      http.begin(CONFIG::APIENDPOINT);
+
+      int httpCode = http.GET();
+      if (httpCode > 0) {
+        Serial.printf("[HTTP] Response code: %d\n", httpCode);
+        String payload = http.getString();
+        Serial.println("[HTTP] Payload:");
+        Serial.println(payload);
+      } else {
+        Serial.printf("[HTTP] Request failed, error: %s\n", http.errorToString(httpCode).c_str());
+      }
+
+      http.end();
+      Serial.println("=== HTTPResponseTest END ===\n");
+    }
+};
+
 // void setup() {
 //   KICProtocolTestCase::runAllTests();
 //   // MotorPinTestCase::runAllTests();
@@ -445,10 +501,9 @@ void loop() {
   for (int i = 0; i < numPins; i++) {
     int pin = watchPins[i];
     int state = digitalRead(pin);
-    if (state != lastState[pin]) {
-      Serial.printf("GPIO%d changed to %d\n", pin, state);
-      lastState[pin] = state;
-    }
+    if (state == lastState[pin]) continue;
+    Serial.printf("GPIO%d changed to %d\n", pin, state);
+    lastState[pin] = state;
   }
   delay(100);
 }
