@@ -11,7 +11,7 @@
 #define KICEND "/"
 
 namespace KIC {
-    SPool* convertToSPool(String& kic);
+    SPool* convertToSPool(const String& kic);
 }
 #endif // !_KIC_
 

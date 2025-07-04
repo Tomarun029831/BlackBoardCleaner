@@ -4,7 +4,7 @@
 
 static Schedule* convertToSchedule(const String& block);
 
-SPool* KIC::convertToSPool(String& kic) {
+SPool* KIC::convertToSPool(const String& kic) {
     SPool* pool = new SPool(nullptr, 0); // TODO: new -> malloc
     // Serial.print("convertToSPool() called with: ");
     // Serial.println(kic);
