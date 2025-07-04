@@ -4,10 +4,10 @@
 #include <WString.h>
 
 // === librarise of esp32 ===
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <time.h>
-#include <sys/time.h>
+// #include <WiFi.h>
+// #include <HTTPClient.h>
+// #include <time.h>
+// #include <sys/time.h>
 
 // === my librarise ===
 #include "lib/KIC.h"
@@ -47,55 +47,6 @@ void clearSerialBuffer() {
   }
 }
 
-class SerialGateway : public ScheduleGateway{
-  public:
-    SerialGateway(){}
-
-    int available() override {
-      return Serial.available();
-    }
-
-  String receiveString() override {
-    String result = "";
-    while (true) {
-      if (Serial.available() <= 0) continue;
-      char c = Serial.read();
-      if (c == 'K') {  // 'K' から開始と仮定
-        result += c;
-        break;
-      }
-    }
-    while (true) {
-      if (Serial.available() <= 0) continue;
-      char c = Serial.read();
-      result += c;
-      if (c == '/') break;  // 終端文字
-    }
-    return result;
-  }
-
-    void sendString(String str) override {
-      Serial.print(str);
-    }
-};
-
-class WirelessGateway : public ScheduleGateway{ // TODO:
-  public:
-    WirelessGateway(){}
-
-    int available() override {
-      return true;
-    }
-
-    String receiveString() override {
-      String result = "";
-      return result;
-    }
-
-    void sendString(String str) override {
-    }
-};
-
 class WheelHandler{
   public:
     static String getAllPin(){
@@ -109,31 +60,42 @@ class WheelHandler{
     }
 
     static void forward(){
-
+      pinMode(leftMotorPin0, HIGH);
+      pinMode(rightMotorPin0, HIGH);
     }
 
     static void backward(){
-
+      pinMode(leftMotorPin1, HIGH);
+      pinMode(rightMotorPin1, HIGH);
     }
 
     static void rightRotate(){ // TODO: args: float dgree
-
+      pinMode(leftMotorPin0, HIGH);
+      pinMode(leftMotorPin1, LOW);
+      pinMode(rightMotorPin0, LOW);
+      pinMode(rightMotorPin1, HIGH);
     }
 
     static void leftRotate(){ // TODO: args: float dgree
-
+      pinMode(leftMotorPin0, LOW);
+      pinMode(leftMotorPin1, HIGH);
+      pinMode(rightMotorPin0, HIGH);
+      pinMode(rightMotorPin1, LOW);
     }
 
     static void stop(){
-
+      pinMode(leftMotorPin0, LOW);
+      pinMode(leftMotorPin1, LOW);
+      pinMode(rightMotorPin0, LOW);
+      pinMode(rightMotorPin1, LOW);
     }
 
   private:
-    static constexpr uint8_t rightMotorPin0;
-    static constexpr uint8_t rightMotorPin1;
-    static constexpr uint8_t leftMotorPin0;
-    static constexpr uint8_t leftMotorPin1;
-}
+    static constexpr uint8_t rightMotorPin0 = 39; // A3
+    static constexpr uint8_t rightMotorPin1 = 32; // A4
+    static constexpr uint8_t leftMotorPin0 = 26; // A19
+    static constexpr uint8_t leftMotorPin1 = 25; // A18
+};
 
 // === TEST CASE ===
 class KICProtocolTestCase
@@ -372,7 +334,8 @@ static SPool* spool;
 void setup() {
   KICProtocolTestCase::runAllTests();
   MotorPinTestCase::runAllTests();
-  MotorManualTestCase::runAllTests();
+  // MotorManualOnFloorTestCase::runAllTests();
+  // MotorManualOnWallTestCase::runAllTests();
 }
 
 void loop() {
