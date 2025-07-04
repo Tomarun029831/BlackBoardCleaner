@@ -2,7 +2,9 @@
 #include <HardwareSerial.h>
 #include "../lib/ScheduleGataway.h"
 
-// SerialGateway::SerialGateway() {}
+int SerialGateway::setup(){
+    return SerialGateway::available(); // TODO: ???
+}
 
 int SerialGateway::available() {
     return Serial.available();

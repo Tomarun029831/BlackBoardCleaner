@@ -5,14 +5,14 @@
 
 class ScheduleGateway{
 public:
-    virtual int available()=0;
+    virtual int setup() = 0; virtual int available()=0;
     virtual String receiveString()=0;
     virtual void sendString(String str)=0;
 };
 
 class SerialGateway : public ScheduleGateway {
 public:
-    // ScheduleGateway();
+    int setup() override;
     int available() override;
     String receiveString() override;
     void sendString(String str) override;
@@ -20,7 +20,7 @@ public:
 
 class WirelessGateway : public ScheduleGateway {
 public:
-    // WirelessGateway();
+    int setup() override;
     int available() override;
     String receiveString() override;
     void sendString(String str) override;

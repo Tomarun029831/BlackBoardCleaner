@@ -8,20 +8,31 @@
 // #include <HTTPClient.h>
 // #include <time.h>
 // #include <sys/time.h>
+#include <Wire.h>
 
 // === my librarise ===
 #include "lib/KIC.h"
-#include "lib/ScheduleGataway.h"
+// #include "lib/ScheduleGataway.h"
 
-/* === auto script for esp32 ===
+/* === auto script for esp-wroom-32D ===
 // COM10    serial   Unknown
 compile script:
-arduino-cli compile --fqbn esp32:esp32:esp32wroverkit .\BlackBoardCleaner
+arduino-cli compile --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner
 */
 
 /*
 upload script:
-arduino-cli upload -p COM9 --fqbn esp32:esp32:esp32wroverkit .\BlackBoardCleaner
+
+
+esp32da
+
+arduino-cli upload -p COM9 --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner
+*/
+
+/*
+auto compile, upload and monitor:
+arduino-cli compile --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner;
+arduino-cli upload -p COM5 --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner;arduino-cli monitor -p COM5 --config baudrate=115200;
 */
 
 /* === auto script for arduino-mega ===
@@ -59,42 +70,50 @@ class WheelHandler{
       return str;
     }
 
+    static void setupPinMode(){
+      pinMode(leftMotorPin0, OUTPUT);
+      pinMode(leftMotorPin1, OUTPUT);
+      pinMode(rightMotorPin0, OUTPUT);
+      pinMode(rightMotorPin1, OUTPUT);
+    }
+
     static void forward(){
-      pinMode(leftMotorPin0, HIGH);
-      pinMode(rightMotorPin0, HIGH);
+      digitalWrite(leftMotorPin0, HIGH);
+      digitalWrite(rightMotorPin0, HIGH);
     }
 
     static void backward(){
-      pinMode(leftMotorPin1, HIGH);
-      pinMode(rightMotorPin1, HIGH);
+      digitalWrite(leftMotorPin1, HIGH);
+      digitalWrite(rightMotorPin1, HIGH);
     }
 
     static void rightRotate(){ // TODO: args: float dgree
-      pinMode(leftMotorPin0, HIGH);
-      pinMode(leftMotorPin1, LOW);
-      pinMode(rightMotorPin0, LOW);
-      pinMode(rightMotorPin1, HIGH);
+      digitalWrite(leftMotorPin0, HIGH);
+      digitalWrite(leftMotorPin1, LOW);
+      digitalWrite(rightMotorPin0, LOW);
+      digitalWrite(rightMotorPin1, HIGH);
     }
 
     static void leftRotate(){ // TODO: args: float dgree
-      pinMode(leftMotorPin0, LOW);
-      pinMode(leftMotorPin1, HIGH);
-      pinMode(rightMotorPin0, HIGH);
-      pinMode(rightMotorPin1, LOW);
+      digitalWrite(leftMotorPin0, LOW);
+      digitalWrite(leftMotorPin1, HIGH);
+      digitalWrite(rightMotorPin0, HIGH);
+      digitalWrite(rightMotorPin1, LOW);
     }
 
     static void stop(){
-      pinMode(leftMotorPin0, LOW);
-      pinMode(leftMotorPin1, LOW);
-      pinMode(rightMotorPin0, LOW);
-      pinMode(rightMotorPin1, LOW);
+      digitalWrite(leftMotorPin0, LOW);
+      digitalWrite(leftMotorPin1, LOW);
+      digitalWrite(rightMotorPin0, LOW);
+      digitalWrite(rightMotorPin1, LOW);
     }
 
   private:
-    static constexpr uint8_t rightMotorPin0 = 39; // A3
-    static constexpr uint8_t rightMotorPin1 = 32; // A4
-    static constexpr uint8_t leftMotorPin0 = 26; // A19
-    static constexpr uint8_t leftMotorPin1 = 25; // A18
+    // pin list: D5, D18, D19, D21
+    static constexpr uint8_t rightMotorPin0 = 5; // D5
+    static constexpr uint8_t rightMotorPin1 = 18; // D18
+    static constexpr uint8_t leftMotorPin0 = 19; // D19
+    static constexpr uint8_t leftMotorPin1 = 21; // D21
 };
 
 // === TEST CASE ===
@@ -216,13 +235,13 @@ class MotorPinTestCase{
     static void runAllTests()
     {
       testStopSignal();
-      delay(3);
+      delay(3000);
       testForwardSignal();
-      delay(3);
+      delay(3000);
       testBackwardSignal();
-      delay(3);
+      delay(3000);
       testRightRotationSignal();
-      delay(3);
+      delay(3000);
       testLeftRotationSignal();
     }
 };
@@ -256,24 +275,26 @@ class MotorManualOnFloorTestCase{
 
     static void runAllTests()
     {
+      Serial.println("=== MotorManualOnFloorTest START ===");
       testFarwardMovement();
-      delay(3);
+      delay(3000);
       testStopMovement();
-      delay(3);
+      delay(3000);
 
       testBackwardMovement();
-      delay(3);
+      delay(3000);
       testStopMovement();
-      delay(3);
+      delay(3000);
 
       testRightRotation();
-      delay(3);
+      delay(3000);
       testStopMovement();
-      delay(3);
+      delay(3000);
 
       testLeftRotation();
-      delay(3);
+      delay(3000);
       testStopMovement();
+      Serial.println("=== MotorManualOnFloorTest END ===");
     }
 };
 
@@ -307,36 +328,77 @@ class MotorManualOnWallTestCase{
     static void runAllTests()
     {
       testFarwardMovement();
-      delay(3);
+      delay(3000);
       testStopMovement();
-      delay(3);
+      delay(3000);
 
       testBackwardMovement();
-      delay(3);
+      delay(3000);
       testStopMovement();
-      delay(3);
+      delay(3000);
 
       testRightRotation();
-      delay(3);
+      delay(3000);
       testStopMovement();
-      delay(3);
+      delay(3000);
 
       testLeftRotation();
-      delay(3);
+      delay(3000);
       testStopMovement();
     }
 };
 
-ScheduleGateway* gateway;
+class WiFiConnectionTestCase
+{
+  public:
+    static void connect()
+    {
+    // HTTPClient http;
+      // ScheduleGateway* gateway = new WirelessGateway();
+      // gateway->setup();
+    }
+};
 
-static SPool* spool;
+// void setup() {
+//   KICProtocolTestCase::runAllTests();
+//   // MotorPinTestCase::runAllTests();
+//   MotorManualOnFloorTestCase::runAllTests();
+//   // MotorManualOnWallTestCase::runAllTests();
+// }
+//
+// void loop() {
+// }
+
+const int watchPins[] = {
+  0, 1, 2, 3, 4, 5,
+  12, 13, 14, 15, 16, 17, 18, 19,
+  21, 22, 23,
+  25, 26, 27,
+  32, 33,
+  34, 35, 36, 39  // 入力専用（readはOK）
+};
+
+const int numPins = sizeof(watchPins) / sizeof(watchPins[0]);
+int lastState[40];  // 多めに確保（indexはピン番号）
 
 void setup() {
-  KICProtocolTestCase::runAllTests();
-  MotorPinTestCase::runAllTests();
-  // MotorManualOnFloorTestCase::runAllTests();
-  // MotorManualOnWallTestCase::runAllTests();
+  Serial.begin(115200);
+
+  for (int i = 0; i < numPins; i++) {
+    int pin = watchPins[i];
+    pinMode(pin, INPUT);
+    lastState[pin] = digitalRead(pin);
+  }
 }
 
 void loop() {
+  for (int i = 0; i < numPins; i++) {
+    int pin = watchPins[i];
+    int state = digitalRead(pin);
+    if (state != lastState[pin]) {
+      Serial.printf("GPIO%d changed to %d\n", pin, state);
+      lastState[pin] = state;
+    }
+  }
+  delay(100);
 }
