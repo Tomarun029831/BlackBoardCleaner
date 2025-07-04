@@ -4,10 +4,10 @@
 #include <WString.h>
 
 // === librarise of esp32 ===
-// #include <WiFi.h>
-// #include <HTTPClient.h>
-// #include <time.h>
-// #include <sys/time.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <time.h>
+#include <sys/time.h>
 #include <Wire.h>
 
 // === my librarise ===
@@ -79,11 +79,15 @@ class WheelHandler{
 
     static void forward(){
       digitalWrite(leftMotorPin0, HIGH);
+      digitalWrite(leftMotorPin1, LOW);
       digitalWrite(rightMotorPin0, HIGH);
+      digitalWrite(rightMotorPin1, LOW);
     }
 
     static void backward(){
+      digitalWrite(leftMotorPin0, LOW);
       digitalWrite(leftMotorPin1, HIGH);
+      digitalWrite(rightMotorPin0, LOW);
       digitalWrite(rightMotorPin1, HIGH);
     }
 
@@ -108,7 +112,6 @@ class WheelHandler{
       digitalWrite(rightMotorPin1, LOW);
     }
 
-  private:
     // pin list: D5, D18, D19, D21
     static constexpr uint8_t rightMotorPin0 = 5; // D5
     static constexpr uint8_t rightMotorPin1 = 18; // D18
@@ -135,7 +138,6 @@ class KICProtocolTestCase
       };
       const int numSchedules = sizeof(expectedCmds) / sizeof(expectedCmds[0]);
 
-      Serial.println("=== testKICParser START ===");
       Serial.print("Received String: ");
       Serial.println(inputStr);
 
@@ -191,17 +193,18 @@ class KICProtocolTestCase
       }
 
       // -- result --
-      Serial.print("testKICParser: Test ");
+      Serial.print("testKICParser ");
       Serial.println(testPassed ? "passed" : "failed");
 
       // -- teardown --
       freeSPool(spool);
-      Serial.println("=== testKICParser END ===");
     }
 
     static void runAllTests()
     {
+      Serial.println("=== KICProtocolTest START ===");
       testKICParser();
+      Serial.println("=== KICProtocolTest END ===");
     }
 };
 
@@ -209,31 +212,77 @@ class MotorPinTestCase{
   public:
     static void testStopSignal()
     {
+      bool testPassed = true;
+      WheelHandler::stop();
 
+      if(digitalRead(WheelHandler::leftMotorPin0) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin1) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin0) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin1) != LOW) testPassed = false;
+
+      Serial.print("testStopSignal ");
+      Serial.println(testPassed ? "passed" : "failed");
     }
 
     static void testForwardSignal()
     {
+      bool testPassed = true;
+      WheelHandler::forward();
 
+      if(digitalRead(WheelHandler::leftMotorPin0) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin1) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin0) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin1) != LOW) testPassed = false;
+
+      Serial.print("testForwardSignal ");
+      Serial.println(testPassed ? "passed" : "failed");
     }
 
     static void testBackwardSignal()
     {
-    
+      bool testPassed = true;
+      WheelHandler::backward();
+
+      if(digitalRead(WheelHandler::leftMotorPin0) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin1) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin0) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin1) != HIGH) testPassed = false;
+
+      Serial.print("testBackwardSignal ");
+      Serial.println(testPassed ? "passed" : "failed");
     }
 
     static void testRightRotationSignal()
     {
+      bool testPassed = true;
+      WheelHandler::rightRotate();
 
+      if(digitalRead(WheelHandler::leftMotorPin0) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin1) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin0) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin1) != HIGH) testPassed = false;
+
+      Serial.print("testBackwardSignal ");
+      Serial.println(testPassed ? "passed" : "failed");
     }
 
     static void testLeftRotationSignal()
     {
+      bool testPassed = true;
+      WheelHandler::leftRotate();
 
+      if(digitalRead(WheelHandler::leftMotorPin0) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin1) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin0) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin1) != LOW) testPassed = false;
+
+      Serial.print("testBackwardSignal ");
+      Serial.println(testPassed ? "passed" : "failed");
     }
 
     static void runAllTests()
     {
+      Serial.println("=== MotorPinTest START ===");
       testStopSignal();
       delay(3000);
       testForwardSignal();
@@ -243,6 +292,7 @@ class MotorPinTestCase{
       testRightRotationSignal();
       delay(3000);
       testLeftRotationSignal();
+      Serial.println("=== MotorPinTest END ===");
     }
 };
 
@@ -358,7 +408,7 @@ class WiFiConnectionTestCase
       // gateway->setup();
     }
 };
-
+//
 // void setup() {
 //   KICProtocolTestCase::runAllTests();
 //   // MotorPinTestCase::runAllTests();
