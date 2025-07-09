@@ -18,22 +18,46 @@
 /* === auto script for esp-wroom-32D ===
 // COM10    serial   Unknown
 compile script:
-arduino-cli compile --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner
+
+ESP32-WROOM-DA Module                                                   esp32:esp32:esp32da
+ESP32 Wrover Kit (all versions)                                         esp32:esp32:esp32wroverkit
+ESP32 Wrover Module                                                     esp32:esp32:esp32wrover
+ESP32 Dev Module                                                        esp32:esp32:esp32
+
+let sketch = "./BlackBoardCleaner"
+
+let boards = [
+  "esp32:esp32:esp32da",
+  "esp32:esp32:esp32wroverkit",
+  "esp32:esp32:esp32wrover",
+  "esp32:esp32:esp32"
+]
+
+for board in $boards {
+  print $"=== Checking ($board) ==="
+  let result = (arduino-cli compile --fqbn $board $sketch | complete)
+  if $result.exit_code == 0 {
+    print $"✅ Success: ($board)"
+  } else {
+    print $"❌ Failed:  ($board)"
+    print $"    stderr: ($result.stderr | lines | get 0?)"
+  }
+}
+
 */
 
 /*
 upload script:
-
-
-esp32da
-
-arduino-cli upload -p COM9 --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner
+arduino-cli upload -p COM9 --fqbn esp32:esp32:esp32 .\BlackBoardCleaner;
 */
 
 /*
 auto compile, upload and monitor:
-arduino-cli compile --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner;
-arduino-cli upload -p COM5 --fqbn esp32:esp32:esp32devkit .\BlackBoardCleaner;arduino-cli monitor -p COM5 --config baudrate=115200;
+
+let fqbn = "esp32:esp32:esp32"
+let port = "COM5"
+
+arduino-cli compile --fqbn $fqbn .\BlackBoardCleaner;arduino-cli upload -p $port --fqbn $fqbn .\BlackBoardCleaner; arduino-cli monitor -p $port --config baudrate=115200;
 */
 
 /* === auto script for arduino-mega ===
@@ -126,7 +150,6 @@ class KICProtocolTestCase
   public:
     static void testKICParser() {
       // -- setup --
-      Serial.begin(9600);
       const String inputStr = "KIC:V1;1437;1090010001130;208000900;8;9;/";
       const char expectedCmds[]   = {'1', '2', '8', '9', '/'};
       const int  expectedCounts[] = {3,    2,   0,   0,   0};
@@ -206,6 +229,7 @@ class KICProtocolTestCase
       Serial.println("=== KICProtocolTest START ===");
       testKICParser();
       Serial.println("=== KICProtocolTest END ===");
+      Serial.flush();
     }
 };
 
@@ -294,11 +318,16 @@ class MotorPinTestCase{
       delay(3000);
       testLeftRotationSignal();
       Serial.println("=== MotorPinTest END ===");
+      Serial.flush();
     }
 };
 
 class MotorManualOnFloorTestCase{
   public:
+    static void setup(){
+      WheelHandler::setupPinMode();
+    }
+
     static void testStopMovement()
     {
       WheelHandler::stop();
@@ -346,6 +375,7 @@ class MotorManualOnFloorTestCase{
       delay(3000);
       testStopMovement();
       Serial.println("=== MotorManualOnFloorTest END ===");
+      Serial.flush();
     }
 };
 
@@ -397,7 +427,7 @@ class MotorManualOnWallTestCase{
       testLeftRotation();
       delay(3000);
       testStopMovement();
-      Serial.println("=== MotorManualOnWallTest START ===");
+      Serial.println("=== MotorManualOnWallTest END ===");
     }
 };
 
@@ -410,7 +440,7 @@ class WiFiConnectionTestCase
       WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
 
       unsigned long startAttemptTime = millis();
-      const unsigned long timeout = 10000; // 10秒以内に接続する
+      const unsigned long timeout = INTMAX_MAX;
 
       while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < timeout)
       {
@@ -432,6 +462,7 @@ class WiFiConnectionTestCase
       Serial.println("=== WiFiConnectionTest START ===");
       connect();
       Serial.println("=== WiFiConnectionTest END ===\n");
+      Serial.flush();
     }
 };
 
@@ -462,48 +493,60 @@ class HTTPResponseTestCase
 
       http.end();
       Serial.println("=== HTTPResponseTest END ===\n");
+      Serial.flush();
     }
 };
 
-// void setup() {
-//   KICProtocolTestCase::runAllTests();
-//   // MotorPinTestCase::runAllTests();
-//   MotorManualOnFloorTestCase::runAllTests();
-//   // MotorManualOnWallTestCase::runAllTests();
-// }
-//
-// void loop() {
-// }
-
-const int watchPins[] = {
-  0, 1, 2, 3, 4, 5,
-  12, 13, 14, 15, 16, 17, 18, 19,
-  21, 22, 23,
-  25, 26, 27,
-  32, 33,
-  34, 35, 36, 39  // 入力専用（readはOK）
-};
-
-const int numPins = sizeof(watchPins) / sizeof(watchPins[0]);
-int lastState[40];  // 多めに確保（indexはピン番号）
-
 void setup() {
   Serial.begin(115200);
-
-  for (int i = 0; i < numPins; i++) {
-    int pin = watchPins[i];
-    pinMode(pin, INPUT);
-    lastState[pin] = digitalRead(pin);
-  }
+  KICProtocolTestCase::runAllTests();
+  // MotorPinTestCase::runAllTests();
+  MotorManualOnFloorTestCase::runAllTests();
+  // MotorManualOnWallTestCase::runAllTests();
 }
 
 void loop() {
-  for (int i = 0; i < numPins; i++) {
-    int pin = watchPins[i];
-    int state = digitalRead(pin);
-    if (state == lastState[pin]) continue;
-    Serial.printf("GPIO%d changed to %d\n", pin, state);
-    lastState[pin] = state;
-  }
-  delay(100);
 }
+
+// const int watchPins[] = {
+//   0, 1, 2, 3, 4, 5,
+//   12, 13, 14, 15, 16, 17, 18, 19,
+//   21, 22, 23,
+//   25, 26, 27,
+//   32, 33,
+//   34, 35, 36, 39  // 入力専用（readはOK）
+// };
+
+// const int numPins = sizeof(watchPins) / sizeof(watchPins[0]);
+// int lastState[40];  // 多めに確保（indexはピン番号）
+
+// void setup() {
+//   Serial.begin(115200);
+//   // WiFiConnectionTestCase::runAllTests();
+//   // HTTPResponseTestCase::runAllTests();
+//
+//   Serial.flush();
+//   Serial.println("In setup");
+//   Serial.flush();
+//
+//   for (int i = 2; i < numPins; i++) {
+//     int pin = watchPins[i];
+//     pinMode(pin, INPUT);
+//     lastState[pin] = digitalRead(pin);
+//     Serial.printf("GPIO%d :", i);
+//     Serial.println(lastState[pin]);
+//     Serial.flush();
+//   }
+// }
+//
+// void loop() {
+//   for (int i = 2; i < numPins; i++) {
+//     int pin = watchPins[i];
+//     int state = digitalRead(pin);
+//     if (state == lastState[pin]) continue;
+//     Serial.printf("GPIO%d changed to %d\n", pin, state);
+//     Serial.flush();
+//     lastState[pin] = state;
+//   }
+//   delay(100);
+// }
