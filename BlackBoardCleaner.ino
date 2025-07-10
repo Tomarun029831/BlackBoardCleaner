@@ -77,6 +77,8 @@ arduino-cli compile --fqbn arduino:avr:mega .\BlackBoardCleaner && arduino-cli u
 arduino-cli monitor -p COM9 --config baudrate=9600
 */
 
+char ** boardGrid;
+
 void clearSerialBuffer() {
   while (Serial.available() > 0) {
     Serial.read();
@@ -85,63 +87,71 @@ void clearSerialBuffer() {
 
 class WheelHandler{
   public:
-    static String getAllPin(){
-      String str = "";
-      str.setCharAt(0, leftMotorPin0 ? 'H' : 'L');
-      str.setCharAt(1, leftMotorPin1 ? 'H' : 'L');
-      str.setCharAt(2, rightMotorPin0 ? 'H' : 'L');
-      str.setCharAt(3, rightMotorPin1 ? 'H' : 'L');
-
+    static String getAllPin() {
+      String str = "----"; // 初期化して4文字確保
+      str.setCharAt(0, (digitalRead(WheelHandler::leftMotorPin0) == HIGH)  ? 'H' : 'L');
+      str.setCharAt(1, (digitalRead(WheelHandler::leftMotorPin1) == HIGH)  ? 'H' : 'L');
+      str.setCharAt(2, (digitalRead(WheelHandler::rightMotorPin0) == HIGH) ? 'H' : 'L');
+      str.setCharAt(3, (digitalRead(WheelHandler::rightMotorPin1) == HIGH) ? 'H' : 'L');
       return str;
     }
 
     static void setupPinMode(){
-      pinMode(leftMotorPin0, OUTPUT);
-      pinMode(leftMotorPin1, OUTPUT);
-      pinMode(rightMotorPin0, OUTPUT);
-      pinMode(rightMotorPin1, OUTPUT);
+      pinMode(WheelHandler::leftMotorPin0, OUTPUT);
+      pinMode(WheelHandler::leftMotorPin1, OUTPUT);
+      pinMode(WheelHandler::rightMotorPin0, OUTPUT);
+      pinMode(WheelHandler::rightMotorPin1, OUTPUT);
     }
 
+    /*
+
+    MODE xIN1 xIN2 xOUT1 xOUT2 動作
+    0 0 1 L H 逆転
+    0 1 0 H L 正転  TODO:
+    0 1 1 L L ブレーキ
+
+    */
+
     static void forward(){
-      digitalWrite(leftMotorPin0, HIGH);
-      digitalWrite(leftMotorPin1, LOW);
-      digitalWrite(rightMotorPin0, HIGH);
-      digitalWrite(rightMotorPin1, LOW);
+      digitalWrite(WheelHandler::leftMotorPin0, HIGH);
+      digitalWrite(WheelHandler::leftMotorPin1, LOW);
+      digitalWrite(WheelHandler::rightMotorPin0, HIGH);
+      digitalWrite(WheelHandler::rightMotorPin1, LOW);
     }
 
     static void backward(){
-      digitalWrite(leftMotorPin0, LOW);
-      digitalWrite(leftMotorPin1, HIGH);
-      digitalWrite(rightMotorPin0, LOW);
-      digitalWrite(rightMotorPin1, HIGH);
+      digitalWrite(WheelHandler::leftMotorPin0, LOW);
+      digitalWrite(WheelHandler::leftMotorPin1, HIGH);
+      digitalWrite(WheelHandler::rightMotorPin0, LOW);
+      digitalWrite(WheelHandler::rightMotorPin1, HIGH);
     }
 
     static void rightRotate(){ // TODO: args: float dgree
-      digitalWrite(leftMotorPin0, HIGH);
-      digitalWrite(leftMotorPin1, LOW);
-      digitalWrite(rightMotorPin0, LOW);
-      digitalWrite(rightMotorPin1, HIGH);
+      digitalWrite(WheelHandler::leftMotorPin0, HIGH);
+      digitalWrite(WheelHandler::leftMotorPin1, LOW);
+      digitalWrite(WheelHandler::rightMotorPin0, LOW);
+      digitalWrite(WheelHandler::rightMotorPin1, HIGH);
     }
 
     static void leftRotate(){ // TODO: args: float dgree
-      digitalWrite(leftMotorPin0, LOW);
-      digitalWrite(leftMotorPin1, HIGH);
-      digitalWrite(rightMotorPin0, HIGH);
-      digitalWrite(rightMotorPin1, LOW);
+      digitalWrite(WheelHandler::leftMotorPin0, LOW);
+      digitalWrite(WheelHandler::leftMotorPin1, HIGH);
+      digitalWrite(WheelHandler::rightMotorPin0, HIGH);
+      digitalWrite(WheelHandler::rightMotorPin1, LOW);
     }
 
     static void stop(){
-      digitalWrite(leftMotorPin0, LOW);
-      digitalWrite(leftMotorPin1, LOW);
-      digitalWrite(rightMotorPin0, LOW);
-      digitalWrite(rightMotorPin1, LOW);
+      digitalWrite(WheelHandler::leftMotorPin0, HIGH);
+      digitalWrite(WheelHandler::leftMotorPin1, HIGH);
+      digitalWrite(WheelHandler::rightMotorPin0, HIGH);
+      digitalWrite(WheelHandler::rightMotorPin1, HIGH);
     }
 
     // pin list: D5, D18, D19, D21
-    static constexpr uint8_t rightMotorPin0 = 5; // D5
-    static constexpr uint8_t rightMotorPin1 = 18; // D18
-    static constexpr uint8_t leftMotorPin0 = 19; // D19
-    static constexpr uint8_t leftMotorPin1 = 21; // D21
+    static constexpr uint8_t rightMotorPin0 = 18; // D18 BIN1
+    static constexpr uint8_t rightMotorPin1 = 5; // D5 BIN2
+    static constexpr uint8_t leftMotorPin0 = 21; // D21 AIN1
+    static constexpr uint8_t leftMotorPin1 = 19; // D19 AIN2
 };
 
 // === TEST CASE ===
@@ -240,10 +250,10 @@ class MotorPinTestCase{
       bool testPassed = true;
       WheelHandler::stop();
 
-      if(digitalRead(WheelHandler::leftMotorPin0) != LOW) testPassed = false;
-      if(digitalRead(WheelHandler::leftMotorPin1) != LOW) testPassed = false;
-      if(digitalRead(WheelHandler::rightMotorPin0) != LOW) testPassed = false;
-      if(digitalRead(WheelHandler::rightMotorPin1) != LOW) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin0) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::leftMotorPin1) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin0) != HIGH) testPassed = false;
+      if(digitalRead(WheelHandler::rightMotorPin1) != HIGH) testPassed = false;
 
       Serial.print("testStopSignal ");
       Serial.println(testPassed ? "passed" : "failed");
@@ -500,12 +510,24 @@ class HTTPResponseTestCase
 void setup() {
   Serial.begin(115200);
   KICProtocolTestCase::runAllTests();
+  WheelHandler::setupPinMode();
+
   // MotorPinTestCase::runAllTests();
   MotorManualOnFloorTestCase::runAllTests();
   // MotorManualOnWallTestCase::runAllTests();
 }
 
 void loop() {
+  switch (Serial.read()) {
+    case 'w': WheelHandler::forward(); Serial.println("forward"); break;
+    case 's': WheelHandler::backward(); Serial.println("backward"); break;
+    case 'd': WheelHandler::rightRotate(); Serial.println("rightRotate"); break;
+    case 'a': WheelHandler::leftRotate(); Serial.println("leftRotate"); break;
+    case 'q': WheelHandler::stop(); Serial.println("stop"); break;
+    case 'p': {String str = WheelHandler::getAllPin();Serial.println(str);break;}
+  }
+
+  Serial.flush();
 }
 
 // const int watchPins[] = {
