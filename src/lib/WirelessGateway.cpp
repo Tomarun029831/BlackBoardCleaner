@@ -1,3 +1,4 @@
+#include "../../update.hpp"
 #include "../../ENV.hpp"
 #include "../../lib/ScheduleGataway.hpp"
 #include <HTTPClient.h>
@@ -10,43 +11,60 @@ int WirelessGateway::setup() {
   WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    update();
+    delay(1000);
     Serial.print(".");
   }
   Serial.println("\nWiFi connected!");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
-  if (WiFi.status() != WL_CONNECTED) {
-    return 1;
-  }
-  HTTPClient http;
-
-  http.begin(CONFIG::APIENDPOINT);
-  int httpCode = http.GET();
-
-  if (httpCode > 0) {
-    Serial.printf("HTTP Response code: %d\n", httpCode);
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      Serial.println("Response:");
-      Serial.println(payload);
-    }
-  } else {
-    Serial.printf("HTTP GET failed, error: %s\n",
-                  http.errorToString(httpCode).c_str());
-  }
-  http.end();
   return 0;
 }
 
-int WirelessGateway::available() { return WiFi.status() == WL_CONNECTED; }
+int WirelessGateway::available() {
+  return WiFi.status() == WL_CONNECTED;
+}
 
 String WirelessGateway::receiveString() {
-  String result = "";
-  return result;
+  if (!available()) {
+    Serial.println("WiFi not connected");
+    return "";
+  }
+
+  HTTPClient http;
+  http.begin(CONFIG::APIENDPOINT);  // 例: http://example.com/api/getdata
+  int httpCode = http.GET();
+
+  String payload = "";
+  if (httpCode > 0) {
+    Serial.printf("GET Response code: %d\n", httpCode);
+    if (httpCode == HTTP_CODE_OK) {
+      payload = http.getString();
+    }
+  } else {
+    Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
+  return payload;
 }
 
 void WirelessGateway::sendString(String str) {
-  // 何もしない（未実装）
+  if (!available()) {
+    Serial.println("WiFi not connected");
+    return;
+  }
+
+  HTTPClient http;
+  http.begin(CONFIG::APIENDPOINT);
+    http.addHeader("Content-Type", "text/plain");
+    int httpCode = http.POST(str);
+
+  if (httpCode > 0) {
+    Serial.printf("POST Response code: %d\n", httpCode);
+  } else {
+    Serial.printf("POST failed, error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
 }
