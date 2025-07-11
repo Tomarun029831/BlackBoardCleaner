@@ -18,7 +18,7 @@ void MotorPinTestCase::testStopSignal() {
 
 void MotorPinTestCase::testForwardSignal() {
     bool testPassed = true;
-    WheelController::forward();
+    WheelController::forward(5);
 
     if (digitalRead(WheelController::leftMotorPin0) != HIGH) testPassed = false;
     if (digitalRead(WheelController::leftMotorPin1) != LOW) testPassed = false;
@@ -31,7 +31,7 @@ void MotorPinTestCase::testForwardSignal() {
 
 void MotorPinTestCase::testBackwardSignal() {
     bool testPassed = true;
-    WheelController::backward();
+    WheelController::backward(5);
 
     if (digitalRead(WheelController::leftMotorPin0) != LOW) testPassed = false;
     if (digitalRead(WheelController::leftMotorPin1) != HIGH) testPassed = false;
@@ -71,13 +71,9 @@ void MotorPinTestCase::testLeftRotationSignal() {
 void MotorPinTestCase::runAllTests() {
     Serial.println("=== MotorPinTest START ===");
     testStopSignal();
-    delay(3000);
     testForwardSignal();
-    delay(3000);
     testBackwardSignal();
-    delay(3000);
     testRightRotationSignal();
-    delay(3000);
     testLeftRotationSignal();
     Serial.println("=== MotorPinTest END ===");
     Serial.flush();

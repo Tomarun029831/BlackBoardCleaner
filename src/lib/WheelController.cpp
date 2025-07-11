@@ -1,6 +1,9 @@
 #include "../../lib/WheelController.hpp"
 #include <Arduino.h>
 
+static constexpr uint MillSecToRotateFor90 = 1000;
+static constexpr uint MillSecToForwardFor5cm = 1000;
+
 String WheelController::getAllPin() {
     String str = "----"; // 4文字確保
     str.setCharAt(0, digitalRead(leftMotorPin0)  == HIGH ? 'H' : 'L');
@@ -17,18 +20,26 @@ void WheelController::setupPinMode() {
     pinMode(rightMotorPin1, OUTPUT);
 }
 
-void WheelController::forward() {
+void WheelController::forward(uint cm) {
+    if(cm == 0)return;
+
     digitalWrite(leftMotorPin0, HIGH);
     digitalWrite(leftMotorPin1, LOW);
     digitalWrite(rightMotorPin0, HIGH);
     digitalWrite(rightMotorPin1, LOW);
+    delay(cm * MillSecToForwardFor5cm);
+    WheelController::stop();
 }
 
-void WheelController::backward() {
+void WheelController::backward(uint cm) {
+    if(cm == 0)return;
+
     digitalWrite(leftMotorPin0, LOW);
     digitalWrite(leftMotorPin1, HIGH);
     digitalWrite(rightMotorPin0, LOW);
     digitalWrite(rightMotorPin1, HIGH);
+    delay(cm * MillSecToForwardFor5cm);
+    WheelController::stop();
 }
 
 void WheelController::rightRotate() {
@@ -36,6 +47,8 @@ void WheelController::rightRotate() {
     digitalWrite(leftMotorPin1, LOW);
     digitalWrite(rightMotorPin0, LOW);
     digitalWrite(rightMotorPin1, HIGH);
+    delay(MillSecToRotateFor90);
+    WheelController::stop();
 }
 
 void WheelController::leftRotate() {
@@ -43,6 +56,8 @@ void WheelController::leftRotate() {
     digitalWrite(leftMotorPin1, HIGH);
     digitalWrite(rightMotorPin0, HIGH);
     digitalWrite(rightMotorPin1, LOW);
+    delay(MillSecToRotateFor90);
+    WheelController::stop();
 }
 
 void WheelController::stop() {

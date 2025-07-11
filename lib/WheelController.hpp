@@ -8,8 +8,8 @@ public:
     static String getAllPin();
     static void setupPinMode();
 
-    static void forward();
-    static void backward();
+    static void forward(uint cm);
+    static void backward(uint cm);
     static void rightRotate();
     static void leftRotate();
     static void stop();

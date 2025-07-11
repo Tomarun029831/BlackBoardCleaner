@@ -8,11 +8,11 @@ void MotorManualOnWallTestCase::testStopMovement() {
 }
 
 void MotorManualOnWallTestCase::testFarwardMovement() {
-    WheelController::forward();
+    WheelController::forward(5);
 }
 
 void MotorManualOnWallTestCase::testBackwardMovement() {
-    WheelController::backward();
+    WheelController::backward(5);
 }
 
 void MotorManualOnWallTestCase::testRightRotation() {
@@ -25,24 +25,20 @@ void MotorManualOnWallTestCase::testLeftRotation() {
 
 void MotorManualOnWallTestCase::runAllTests() {
     Serial.println("=== MotorManualOnWallTest START ===");
-    
+
     testFarwardMovement();
-    delay(3000);
     testStopMovement();
     delay(3000);
 
     testBackwardMovement();
-    delay(3000);
     testStopMovement();
     delay(3000);
 
     testRightRotation();
-    delay(3000);
     testStopMovement();
     delay(3000);
 
     testLeftRotation();
-    delay(3000);
     testStopMovement();
 
     Serial.println("=== MotorManualOnWallTest END ===");
