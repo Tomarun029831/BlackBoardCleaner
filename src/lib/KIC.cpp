@@ -1,5 +1,5 @@
-#include "../lib/KIC.h"
-#include "../lib/SPool.h"
+#include "../../lib/KIC.hpp"
+#include "../../lib/SPool.hpp"
 // #include <HardwareSerial.h> // TODO: only for DEBUG
 
 static Schedule* convertToSchedule(const String& block);

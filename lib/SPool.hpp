@@ -1,7 +1,7 @@
 #ifndef _SPOOL_
 #define _SPOOL_
 
-#include "./Schedule.h"
+#include "./Schedule.hpp"
 
 struct SPool {
   SPool(Schedule** schedules = nullptr, unsigned int count = 0);

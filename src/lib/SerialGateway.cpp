@@ -1,6 +1,6 @@
 #include <WString.h>
 #include <HardwareSerial.h>
-#include "../lib/ScheduleGataway.h"
+#include "../../lib/ScheduleGataway.hpp"
 
 int SerialGateway::setup(){
     return SerialGateway::available(); // TODO: ???

@@ -1,4 +1,4 @@
-#include "../lib/SPool.h"
+#include "../../lib/SPool.hpp"
 #include <stdlib.h>
 
 SPool::SPool(Schedule** schedules, unsigned int count):schedules(schedules), count(count) {}

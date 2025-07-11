@@ -1,5 +1,5 @@
-#include "../ENV.h"
-#include "../lib/ScheduleGataway.h"
+#include "../../ENV.hpp"
+#include "../../lib/ScheduleGataway.hpp"
 #include <HTTPClient.h>
 #include <HardwareSerial.h>
 #include <WString.h>

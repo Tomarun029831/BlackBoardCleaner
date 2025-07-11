@@ -1,6 +1,6 @@
 #ifndef _KIC_
 #define _KIC_
-#include "./SPool.h"
+#include "./SPool.hpp"
 #include <WString.h>
 
 //ex) KIC:V1;1437;1090010001130;208000900;8;9;/
