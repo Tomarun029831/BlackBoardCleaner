@@ -9,10 +9,10 @@ void WiFiConnectionTestCase::connect() {
     WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
 
     unsigned long startAttemptTime = millis();
-    const unsigned long timeout = INTMAX_MAX;  // 実用上は大きすぎるかも
+    const unsigned long timeout = INTMAX_MAX;
 
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < timeout) {
-        delay(500);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(5000);
         Serial.print(".");
     }
 
