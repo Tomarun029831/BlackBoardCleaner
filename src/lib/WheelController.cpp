@@ -1,8 +1,8 @@
 #include "../../lib/WheelController.hpp"
 #include <Arduino.h>
 
-static constexpr uint MillSecToRotateFor90 = 1000;
-static constexpr uint MillSecToForwardFor5cm = 1000;
+static constexpr int MillSecToRotateFor90 = 1000;
+static constexpr int MillSecToForwardFor5cm = 1000;
 
 String WheelController::getAllPin() {
     String str = "----"; // 4文字確保

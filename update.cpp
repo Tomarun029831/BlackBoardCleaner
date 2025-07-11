@@ -1,3 +1,16 @@
+// === librarise of arduino-mega ===
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <WString.h>
+
+// === librarise of esp32 ===
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <time.h>
+#include <sys/time.h>
+#include <Wire.h>
+
+// === core ===
 #include "./update.hpp"
 
 // === my librarise ===
@@ -38,6 +51,7 @@ void startCleaning(uint high_cm, uint width_cm) {
 void awake() {
   Serial.begin(115200);
   WheelController::setupPinMode();
+  WheelController::stop();
 
   for (ScheduleGateway* gateway : gateways) {
     gateway->setup();
@@ -60,14 +74,17 @@ void update() {
   }
 
   Serial.flush();
-
-  for (ScheduleGateway* gateway : gateways) {
-    if (!gateway->available()) continue;
-
-    String ret = gateway->receiveString();
-    if (ret.length() > 0) {
-      Serial.print("Received from gateway: ");
-      Serial.println(ret);
-    }
-  }
+  // Serial.println("Out of ForEach");
+  //
+  // for (ScheduleGateway* gateway : gateways) {
+  //   Serial.println("In ForEach");
+  //   if (!gateway->available()) continue;
+  //   Serial.println("In ForEach: over the gard");
+  //
+  //   String ret = gateway->receiveString();
+  //   if (ret.length() > 0) {
+  //     Serial.print("Received from gateway: ");
+  //     Serial.println(ret);
+  //   }
+  // }
 }

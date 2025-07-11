@@ -1,15 +1,3 @@
-// === librarise of arduino-mega ===
-#include <Arduino.h>
-#include <HardwareSerial.h>
-#include <WString.h>
-
-// === librarise of esp32 ===
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <time.h>
-#include <sys/time.h>
-#include <Wire.h>
-
 // === my tests ===
 #include "./test/WiFiConnectionTestCase.hpp"
 #include "./test/HTTPResponseTestCase.hpp"
@@ -95,6 +83,8 @@ void setup() {
 
   // === Test ===
   KICProtocolTestCase::runAllTests();
+  WiFiConnectionTestCase::runAllTests();
+  HTTPResponseTestCase::runAllTests();
   // MotorPinTestCase::runAllTests();
   // MotorManualOnFloorTestCase::runAllTests();
   // MotorManualOnWallTestCase::runAllTests();
