@@ -10,12 +10,6 @@
 #include <sys/time.h>
 #include <Wire.h>
 
-// === my librarise ===
-#include "./lib/KIC.hpp"
-#include "./lib/WheelController.hpp"
-// #include "lib/ScheduleGataway.hpp"
-#include "./ENV.hpp"
-
 // === my tests ===
 #include "./test/WiFiConnectionTestCase.hpp"
 #include "./test/HTTPResponseTestCase.hpp"
@@ -24,6 +18,8 @@
 #include "./test/MotorManualOnWallTestCase.hpp"
 #include "./test/KICProtocolTestCase.hpp"
 
+// === core loop ===
+#include "./update.hpp"
 
 /* === auto script for esp-wroom-32D ===
 // COM10    serial   Unknown
@@ -87,77 +83,23 @@ arduino-cli compile --fqbn arduino:avr:mega .\BlackBoardCleaner && arduino-cli u
 arduino-cli monitor -p COM9 --config baudrate=9600
 */
 
-char ** boardGrid;
-
-void clearSerialBuffer() {
-  while (Serial.available() > 0) {
-    Serial.read();
-  }
-}
+/*
+MACHINE:
+HEIGHT = 20 cm
+WIDTH = 15 cm
+*/
 
 
 void setup() {
-  Serial.begin(115200);
-  KICProtocolTestCase::runAllTests();
-  WheelController::setupPinMode();
+  awake();
 
+  // === Test ===
+  KICProtocolTestCase::runAllTests();
   // MotorPinTestCase::runAllTests();
-  MotorManualOnFloorTestCase::runAllTests();
+  // MotorManualOnFloorTestCase::runAllTests();
   // MotorManualOnWallTestCase::runAllTests();
 }
 
 void loop() {
-  switch (Serial.read()) {
-    case 'w': WheelController::forward(); Serial.println("forward"); break;
-    case 's': WheelController::backward(); Serial.println("backward"); break;
-    case 'd': WheelController::rightRotate(); Serial.println("rightRotate"); break;
-    case 'a': WheelController::leftRotate(); Serial.println("leftRotate"); break;
-    case 'q': WheelController::stop(); Serial.println("stop"); break;
-    case 'p': {String str = WheelController::getAllPin();Serial.println(str);break;}
-  }
-
-  Serial.flush();
+  update();
 }
-
-// const int watchPins[] = {
-//   0, 1, 2, 3, 4, 5,
-//   12, 13, 14, 15, 16, 17, 18, 19,
-//   21, 22, 23,
-//   25, 26, 27,
-//   32, 33,
-//   34, 35, 36, 39  // 入力専用（readはOK）
-// };
-
-// const int numPins = sizeof(watchPins) / sizeof(watchPins[0]);
-// int lastState[40];  // 多めに確保（indexはピン番号）
-
-// void setup() {
-//   Serial.begin(115200);
-//   // WiFiConnectionTestCase::runAllTests();
-//   // HTTPResponseTestCase::runAllTests();
-//
-//   Serial.flush();
-//   Serial.println("In setup");
-//   Serial.flush();
-//
-//   for (int i = 2; i < numPins; i++) {
-//     int pin = watchPins[i];
-//     pinMode(pin, INPUT);
-//     lastState[pin] = digitalRead(pin);
-//     Serial.printf("GPIO%d :", i);
-//     Serial.println(lastState[pin]);
-//     Serial.flush();
-//   }
-// }
-//
-// void loop() {
-//   for (int i = 2; i < numPins; i++) {
-//     int pin = watchPins[i];
-//     int state = digitalRead(pin);
-//     if (state == lastState[pin]) continue;
-//     Serial.printf("GPIO%d changed to %d\n", pin, state);
-//     Serial.flush();
-//     lastState[pin] = state;
-//   }
-//   delay(100);
-// }
