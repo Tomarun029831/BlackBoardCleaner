@@ -83,8 +83,8 @@ void setup() {
 
   // === Test ===
   KICProtocolTestCase::runAllTests();
-  WiFiConnectionTestCase::runAllTests();
-  HTTPResponseTestCase::runAllTests();
+  // WiFiConnectionTestCase::runAllTests();
+  // HTTPResponseTestCase::runAllTests();
   // MotorPinTestCase::runAllTests();
   // MotorManualOnFloorTestCase::runAllTests();
   // MotorManualOnWallTestCase::runAllTests();

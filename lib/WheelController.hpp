@@ -14,10 +14,26 @@ public:
     static void leftRotate();
     static void stop();
 
-    static constexpr uint8_t rightMotorPin0 = 18; // D18 BIN1
-    static constexpr uint8_t rightMotorPin1 = 5;  // D5  BIN2
-    static constexpr uint8_t leftMotorPin0  = 21; // D21 AIN1
-    static constexpr uint8_t leftMotorPin1  = 19; // D19 AIN2
+/* LeftMotor
+ * (Blue Pin, White Pin)
+ * (LOW, HIGH) => Reverse
+ * (HIGH, LOW) => Forward
+ * (HIGH, HIGH) => <STOP>
+ * (LOW, LOW) => <STOP>
+ */
+    static constexpr uint8_t leftMotorPin0  = 5;
+    static constexpr uint8_t leftMotorPin1  = 18;
+
+/* RightMotor
+ * (Blue Pin, Yellow Pin)
+ * (LOW, HIGH) => Forward
+ * (HIGH, LOW) => Reverse
+ * (HIGH, HIGH) => <STOP>
+ * (LOW, LOW) => <STOP>
+ */
+    static constexpr uint8_t rightMotorPin0 = 19;
+    static constexpr uint8_t rightMotorPin1 = 21;
+
 };
 
 #endif // !_WHEELCONTROLLER_

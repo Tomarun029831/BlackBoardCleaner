@@ -18,6 +18,8 @@ void WheelController::setupPinMode() {
     pinMode(leftMotorPin1, OUTPUT);
     pinMode(rightMotorPin0, OUTPUT);
     pinMode(rightMotorPin1, OUTPUT);
+    String str = WheelController::getAllPin();
+    Serial.println(str);
 }
 
 void WheelController::forward(uint cm) {
@@ -27,6 +29,8 @@ void WheelController::forward(uint cm) {
     digitalWrite(leftMotorPin1, LOW);
     digitalWrite(rightMotorPin0, HIGH);
     digitalWrite(rightMotorPin1, LOW);
+    String str = WheelController::getAllPin();
+    Serial.println(str);
     delay(cm * MillSecToForwardFor5cm);
     WheelController::stop();
 }
@@ -38,6 +42,8 @@ void WheelController::backward(uint cm) {
     digitalWrite(leftMotorPin1, HIGH);
     digitalWrite(rightMotorPin0, LOW);
     digitalWrite(rightMotorPin1, HIGH);
+    String str = WheelController::getAllPin();
+    Serial.println(str);
     delay(cm * MillSecToForwardFor5cm);
     WheelController::stop();
 }
@@ -47,6 +53,8 @@ void WheelController::rightRotate() {
     digitalWrite(leftMotorPin1, LOW);
     digitalWrite(rightMotorPin0, LOW);
     digitalWrite(rightMotorPin1, HIGH);
+    String str = WheelController::getAllPin();
+    Serial.println(str);
     delay(MillSecToRotateFor90);
     WheelController::stop();
 }
@@ -56,6 +64,8 @@ void WheelController::leftRotate() {
     digitalWrite(leftMotorPin1, HIGH);
     digitalWrite(rightMotorPin0, HIGH);
     digitalWrite(rightMotorPin1, LOW);
+    String str = WheelController::getAllPin();
+    Serial.println(str);
     delay(MillSecToRotateFor90);
     WheelController::stop();
 }
@@ -65,4 +75,10 @@ void WheelController::stop() {
     digitalWrite(leftMotorPin1, HIGH);
     digitalWrite(rightMotorPin0, HIGH);
     digitalWrite(rightMotorPin1, HIGH);
+    // digitalWrite(leftMotorPin0, LOW);
+    // digitalWrite(leftMotorPin1, LOW);
+    // digitalWrite(rightMotorPin0, LOW);
+    // digitalWrite(rightMotorPin1, LOW);
+    String str = WheelController::getAllPin();
+    Serial.println(str);
 }

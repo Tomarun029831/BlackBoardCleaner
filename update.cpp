@@ -53,9 +53,9 @@ void awake() {
   WheelController::setupPinMode();
   WheelController::stop();
 
-  for (ScheduleGateway* gateway : gateways) {
-    gateway->setup();
-  }
+  // for (ScheduleGateway* gateway : gateways) {
+  //   gateway->setup();
+  // }
 }
 
 void update() {
