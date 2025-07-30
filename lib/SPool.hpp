@@ -10,8 +10,8 @@ struct SPool {
   unsigned int count;
 };
 
-bool queueSchedule(Schedule* schedule, SPool* pool);
-Schedule* dequeueSchedule(SPool* pool, bool& isSuccess); // PERF: O(n)
+bool pushSchedule(Schedule* schedule, SPool* pool);
+Schedule* popSchedule(SPool* pool, bool& isSuccess);
 void freeSPool(SPool* pool);
 
 #endif // !_SPOOL_

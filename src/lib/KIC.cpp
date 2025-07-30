@@ -5,7 +5,12 @@
 static Schedule* convertToSchedule(const String& block);
 
 SPool* KIC::convertToSPool(const String& kic) {
-    SPool* pool = new SPool(nullptr, 0); // TODO: new -> malloc
+    SPool* pool = (SPool*) malloc(sizeof(SPool));
+    if (pool == NULL) return NULL;
+
+    pool->data = nullptr;
+    pool->length = 0;
+
     // Serial.print("convertToSPool() called with: ");
     // Serial.println(kic);
 
@@ -64,7 +69,13 @@ static Schedule* convertToSchedule(const String& block) {
     // Serial.print("convertToSchedule called with: ");
     // Serial.println(block);
     char cmd = block.charAt(0);
-    Schedule* schedule=new Schedule(cmd, nullptr, 0); // TODO: new -> malloc
+    
+    Schedule* schedule = (Schedule*) malloc(sizeof(Schedule));
+    if (!schedule) return nullptr;
+
+    schedule->command = cmd;
+    schedule->data = nullptr;
+    schedule->length = 0;
 
     for (int i = 1; i + 4 <= block.length() + 1; i += 4) {
       String chunk = block.substring(i, i + 4);

@@ -9,7 +9,7 @@ struct Schedule {
   unsigned int count;
 };
 
-bool queueHours(const int hour, Schedule *schedule);
-unsigned int dequeueHour(Schedule *schedule, bool& isSuccess); // PERF: O(n)
+bool pushHour(const int hour, Schedule* schedule);
+unsigned int popHour(Schedule* schedule, bool& isSuccess);
 
 #endif // !_SCHEDULE_
