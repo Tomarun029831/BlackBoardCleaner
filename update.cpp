@@ -4,28 +4,26 @@
 #include <WString.h>
 
 // === librarise of esp32 ===
-#include <WiFi.h>
 #include <HTTPClient.h>
-#include <time.h>
-#include <sys/time.h>
+#include <WiFi.h>
 #include <Wire.h>
+#include <sys/time.h>
+#include <time.h>
 
 // === core ===
 #include "./update.hpp"
 
 // === my librarise ===
+#include "./ENV.hpp"
 #include "./lib/KIC.hpp"
 #include "./lib/ScheduleGateway.hpp"
 #include "./lib/WheelController.hpp"
-#include "./ENV.hpp"
 
 constexpr uint WIDTH_BLACKBOARD = 335; /* cm */
-constexpr uint HIGH_BLACKBOARD  = 105; /* cm */
+constexpr uint HIGH_BLACKBOARD = 105;  /* cm */
 
-static ScheduleGateway* gateways[2] = {
-  new SerialGateway(),
-  new WirelessGateway()
-};
+static ScheduleGateway *gateways[2] = {new SerialGateway(),
+                                       new WirelessGateway()};
 
 void startCleaning(uint high_cm, uint width_cm) {
   constexpr uint BODY_HEIGHT_CM = 20;
@@ -52,6 +50,7 @@ void awake() {
   Serial.begin(115200);
   WheelController::setupPinMode();
   WheelController::stop();
+  // WheelController::forward(10000);
 
   // for (ScheduleGateway* gateway : gateways) {
   //   gateway->setup();
@@ -60,20 +59,39 @@ void awake() {
 
 void update() {
   switch (Serial.read()) {
-    case 'W': WheelController::forward(1); Serial.println("forward"); break;
-    case 'S': WheelController::backward(1); Serial.println("backward"); break;
-    case 'D': WheelController::rightRotate(); Serial.println("rightRotate"); break;
-    case 'A': WheelController::leftRotate(); Serial.println("leftRotate"); break;
-    case 'Q': WheelController::stop(); Serial.println("stop"); break;
-    case 'E': startCleaning(HIGH_BLACKBOARD, WIDTH_BLACKBOARD); Serial.println("auto cleaning"); break;
+    case 'W':
+        WheelController::forward(1);
+        Serial.println("forward");
+        break;
+    case 'S':
+        WheelController::backward(1);
+        Serial.println("backward");
+        break;
+    case 'D':
+        WheelController::rightRotate();
+        Serial.println("rightRotate");
+        break;
+    case 'A':
+        WheelController::leftRotate();
+        Serial.println("leftRotate");
+        break;
+    case 'Q':
+        WheelController::stop();
+        Serial.println("stop");
+        break;
+    case 'E':
+        startCleaning(HIGH_BLACKBOARD, WIDTH_BLACKBOARD);
+        Serial.println("auto cleaning");
+        break;
     case 'P': {
-      String str = WheelController::getAllPin();
-      Serial.println(str);
-      break;
+        String str = WheelController::getAllPin();
+        Serial.println(str);
+        break;
     }
   }
 
   Serial.flush();
+
   // Serial.println("Out of ForEach");
   //
   // for (ScheduleGateway* gateway : gateways) {

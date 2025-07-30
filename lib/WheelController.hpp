@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+// about PWM: https://wak-tech.com/archives/742
+
 class WheelController {
 public:
     static String getAllPin();
