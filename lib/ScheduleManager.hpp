@@ -19,28 +19,28 @@ struct ScheduleEntry {
 class ScheduleManager {
 public:
     ScheduleManager();
-    
+
     // スケジュール管理
     bool addSchedule(const ParsedSchedule& schedule);
     bool removeSchedule(char command);
     void clearAllSchedules();
-    
+
     // 実行チェック
     bool checkPendingCommands(char* pendingCommands, unsigned int maxCommands, unsigned int& numPending);
     void markCommandExecuted(char command);
-    
+
     // 時刻管理
     void updateCurrentTime(unsigned long timestamp);
     unsigned long getCurrentTime() const;
-    
+
     // デバッグ
     void printSchedules() const;
-    
+
 private:
     ScheduleEntry schedules[MAX_SCHEDULES];
     unsigned int numSchedules;
     unsigned long currentTime;
-    
+
     bool isTimeToExecute(const ScheduleEntry& entry) const;
     unsigned int getCurrentHHMM() const;
     int findScheduleIndex(char command) const;

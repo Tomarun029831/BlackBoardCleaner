@@ -24,7 +24,7 @@ KICInfo* KICProtocolParser::parse(const String& kicString) {
     kicInfo->boardHeight = 0;
     kicInfo->boardWidth = 0;
     kicInfo->numScheduleBlocks = 0;
-    
+
     // KICENDをチェック
     if (!kicString.endsWith(KICEND)) {
         Serial.println("KIC string does not end with proper terminator");
@@ -43,7 +43,7 @@ KICInfo* KICProtocolParser::parse(const String& kicString) {
         }
 
         String segment = kicString.substring(segmentStart, segmentEnd);
-        
+
         switch (segmentIndex) {
             case 0: // Version
                 if (!validateVersion(segment)) {
@@ -53,7 +53,7 @@ KICInfo* KICProtocolParser::parse(const String& kicString) {
                 }
                 kicInfo->version = segment;
                 break;
-                
+
             case 1: // Timestamp
                 if (!validateTimestamp(segment)) {
                     Serial.println("Invalid timestamp: " + segment);
@@ -62,7 +62,7 @@ KICInfo* KICProtocolParser::parse(const String& kicString) {
                 }
                 kicInfo->timestamp = segment.toInt();
                 break;
-                
+
             case 2: // Board dimensions
                 if (!validateBoardDimensions(segment)) {
                     Serial.println("Invalid board dimensions: " + segment);
@@ -73,7 +73,7 @@ KICInfo* KICProtocolParser::parse(const String& kicString) {
                 kicInfo->boardHeight = segment.substring(0, 4).toInt();
                 kicInfo->boardWidth = segment.substring(4, 8).toInt();
                 break;
-                
+
             default: // Schedule blocks
                 if (segment.length() > 0 && segment != "/" && 
                     kicInfo->numScheduleBlocks < MAX_SCHEDULE_BLOCKS) {
@@ -85,7 +85,7 @@ KICInfo* KICProtocolParser::parse(const String& kicString) {
 
         segmentStart = segmentEnd + 1;
         segmentIndex++;
-        
+
         // 終端に達した場合は終了
         if (segmentEnd >= kicString.length() - 1) {
             break;
@@ -134,7 +134,7 @@ bool KICProtocolParser::isValidKICFormat(const String& kicString) {
     if (kicString.length() < 10) return false;
     if (!kicString.startsWith(KICVERSION)) return false;
     if (!kicString.endsWith(KICEND)) return false;
-    
+
     // セミコロンの数をチェック（最低3個必要）
     int semicolonCount = 0;
     for (int i = 0; i < kicString.length(); i++) {
@@ -142,7 +142,7 @@ bool KICProtocolParser::isValidKICFormat(const String& kicString) {
             semicolonCount++;
         }
     }
-    
+
     return semicolonCount >= 3;
 }
 
@@ -162,14 +162,14 @@ bool KICProtocolParser::validateTimestamp(const String& timestamp) {
 
 bool KICProtocolParser::validateBoardDimensions(const String& dimensions) {
     if (dimensions.length() != 8) return false;
-    
+
     // 全て数字かチェック
     for (int i = 0; i < dimensions.length(); i++) {
         if (!isdigit(dimensions.charAt(i))) {
             return false;
         }
     }
-    
+
     return true;
 }
 

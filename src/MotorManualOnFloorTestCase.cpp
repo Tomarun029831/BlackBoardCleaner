@@ -41,26 +41,26 @@ void MotorManualOnFloorTestCase::testLeftRotation() {
 
 void MotorManualOnFloorTestCase::runBasicMovementTest() {
     Serial.println("=== Basic Movement Test START ===");
-    
+
     // Forward movement test
     testForwardMovement();
     testStopMovement();
     delay(2000);
-    
+
     // Repeat forward movement
     testForwardMovement();
     testStopMovement();
     delay(2000);
-    
+
     Serial.println("=== Basic Movement Test END ===");
 }
 
 void MotorManualOnFloorTestCase::runAllTests() {
     Serial.println("=== MotorManualOnFloorTest START ===");
-    
+
     // Basic movement test
     runBasicMovementTest();
-    
+
     Serial.println("=== MotorManualOnFloorTest COMPLETE ===");
     Serial.flush();
 }

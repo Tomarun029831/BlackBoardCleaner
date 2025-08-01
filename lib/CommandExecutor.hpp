@@ -16,16 +16,16 @@ public:
     static bool executeCommand(char command);
     static bool executeCommand(char command, unsigned int parameter);
     static bool registerCustomCommand(char command, void (*handler)());
-    
+
 private:
     static CustomCommandEntry customCommands[MAX_CUSTOM_COMMANDS];
     static unsigned int numCustomCommands;
-    
+
     static void executeCleaningSequence();
     static void executeEmergencyStop();
     static void executeStatusReport();
     static void (*findCustomHandler(char command))();
-    
+
     // コマンドマッピング
     static const char CMD_FORWARD = 'W';
     static const char CMD_BACKWARD = 'S';
