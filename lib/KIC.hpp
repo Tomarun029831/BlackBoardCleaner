@@ -3,15 +3,24 @@
 #include "./SPool.hpp"
 #include <WString.h>
 
-//ex) KIC:V1;1437;1090010001130;208000900;8;9;/
-//ex) KIC:V1;1437;1_0900_1000_1130;2_0800_0900;8;9;/
-
-#define KICVERSION "KIC:V1"
+#define KICVERSION "KIC:V2"
 #define KICSEGMENTCHAR ';'
 #define KICEND "/"
 
 namespace KIC {
-    SPool* convertToSPool(const String& kic);
+    struct Board{
+        unsigned int height;
+        unsigned int width;
+    };
+
+    struct KICINFO{
+        Schedule* timestamp;
+        Board board;
+        SPool* spool;
+    };
+
+    KICINFO* convertToKIC(const String& kic);
 }
+
 #endif // !_KIC_
 

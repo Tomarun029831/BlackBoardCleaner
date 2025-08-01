@@ -11,13 +11,13 @@
 #include <time.h>
 
 // === core ===
-#include "./update.hpp"
+#include "../update.hpp"
 
 // === my librarise ===
-#include "./ENV.hpp"
-#include "./lib/KIC.hpp"
-#include "./lib/ScheduleGateway.hpp"
-#include "./lib/WheelController.hpp"
+#include "../ENV.hpp"
+#include "../lib/KIC.hpp"
+#include "../lib/ScheduleGateway.hpp"
+#include "../lib/WheelController.hpp"
 
 constexpr uint WIDTH_BLACKBOARD = 335; /* cm */
 constexpr uint HIGH_BLACKBOARD = 105;  /* cm */
@@ -47,10 +47,8 @@ void startCleaning(uint high_cm, uint width_cm) {
 }
 
 void awake() {
-  Serial.begin(115200);
   WheelController::setupPinMode();
   WheelController::stop();
-  // WheelController::forward(10000);
 
   // for (ScheduleGateway* gateway : gateways) {
   //   gateway->setup();

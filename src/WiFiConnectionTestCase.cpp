@@ -1,5 +1,5 @@
-#include "../../test/WiFiConnectionTestCase.hpp"
-#include "../../ENV.hpp"
+#include "../test/WiFiConnectionTestCase.hpp"
+#include "../ENV.hpp"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <WiFi.h>

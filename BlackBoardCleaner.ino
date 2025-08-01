@@ -1,17 +1,27 @@
 // === my tests ===
-// #include "./test/WiFiConnectionTestCase.hpp"
-// #include "./test/HTTPResponseTestCase.hpp"
+#include "./test/WiFiConnectionTestCase.hpp"
+#include "./test/HTTPResponseTestCase.hpp"
 // #include "./test/MotorPinTestCase.hpp"
-// #include "./test/MotorManualOnFloorTestCase.hpp"
-// #include "./test/MotorManualOnWallTestCase.hpp"
-// #include "./test/KICProtocolTestCase.hpp"
+#include "./test/MotorManualOnFloorTestCase.hpp"
+#include "./test/MotorManualOnWallTestCase.hpp"
+#include "./test/KICProtocolTestCase.hpp"
+#include "./ENV.hpp"
+
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <WiFi.h>
 
 // === core loop ===
-// #include "./update.hpp"
+// #include "./lib/WheelController.h"
+#include "./update.hpp"
+
+
 
 /* === auto script for esp-wroom-32D ===
 // COM10    serial   Unknown
 compile script:
+
+
 
 // Driver
 // https://akizukidenshi.com/goodsaffix/AE-DRV8835-S_20210526.pdf
@@ -86,69 +96,103 @@ HEIGHT = 20 cm
 WIDTH = 15 cm
 */
 
-
 void setup() {
-  awake();
+  Serial.begin(115200);
+  // wheel_setup_pin_mode();
+  // wheel_stop();
+  // awake();
 
   // === Test ===
-  KICProtocolTestCase::runAllTests();
-  // WiFiConnectionTestCase::runAllTests();
-  // HTTPResponseTestCase::runAllTests();
+  WiFiConnectionTestCase::connect();
+  HTTPResponseTestCase::runAllTests();
+  // KICProtocolTestCase::runAllTests();
   // MotorPinTestCase::runAllTests();
-  while(1){
-    MotorManualOnFloorTestCase::runAllTests();
-  }
+
+  // while(1){
+    // wheel_forward(3);  // C言語スタイルの関数呼び出し
+    // wheel_backward(3);  // C言語スタイルの関数呼び出し
+    // wheel_right_rotate();  // C言語スタイルの関数呼び出し
+    // wheel_left_rotate();  // C言語スタイルの関数呼び出し
+    // MotorManualOnFloorTestCase::runAllTests();
+  // }
   // MotorManualOnWallTestCase::runAllTests();
 }
 
-void loop() {
-  update();
-}
-
-
-// === ESP32用 DCモーター制御コード ===
-// DC MOTOR  CW/CCW and SPEED CONTROL (PWM = 490Hz)
-//
-// int IN1 = 5;
-// int IN2 = 18;
-// int VR_PIN = A0;
-// int VR_VALUE;
-// int PWM_VALUE;
-// int motorStatus = 0;  // 状態: 0 = 停止, 1 = CCW, 2 = CW
-//
-// // PWM用設定
-// const int pwmFreq = 490;
-// const int pwmResolution = 8; // 8bit => 0~255
-// const int pwmChannel1 = 0;
-// const int pwmChannel2 = 1;
 //
 // void setup() {
-//   // PWMチャンネルのセットアップ
-//   ledcSetup(pwmChannel1, pwmFreq, pwmResolution);
-//   ledcSetup(pwmChannel2, pwmFreq, pwmResolution);
+//   Serial.begin(115200);
+//   WheelController::setupPinMode();
+//   WheelController::stop();
 //
-//   // ピンにPWMチャンネルをアタッチ
-//   ledcAttachPin(IN1, pwmChannel1);
-//   ledcAttachPin(IN2, pwmChannel2);
-// }
+//   Serial.println("4ピン全16通りテスト開始");
+//   Serial.println("leftMotorPin0, leftMotorPin1, rightMotorPin0, rightMotorPin1");
 //
-// void PWM_SYORI(){
-//   if (motorStatus == 0){  // BREAK
-//     ledcWrite(pwmChannel1, 255);
-//     ledcWrite(pwmChannel2, 255);
-//   }
-//   else if (motorStatus == 1){  // CCW
-//     ledcWrite(pwmChannel1, PWM_VALUE);
-//     ledcWrite(pwmChannel2, 0);
-//   }
-//   else if (motorStatus == 2){  // CW
-//     ledcWrite(pwmChannel1, 0);
-//     ledcWrite(pwmChannel2, PWM_VALUE);
-//   }
-// }
+//   digitalWrite(WheelController::leftMotorPin0, HIGH);
+//   digitalWrite(WheelController::leftMotorPin1, HIGH);
+//   digitalWrite(WheelController::rightMotorPin0, HIGH);
+//   digitalWrite(WheelController::rightMotorPin1, HIGH);
 //
-// void loop(){
-//   motorStatus = (motorStatus + 1) % 3;
-//   PWM_SYORI();
-//   delay(1000);
+// /*
+// パターン 0: 0 0 0 0 L stop, R stop
+// パターン 1: 1 0 0 0 L forward, R stop
+// パターン 2: 0 1 0 0 L backward, R stop
+// パターン 3: 1 1 0 0 L stop, R stop
+// パターン 4: 0 0 1 0 L stop, R forward
+// パターン 5: 1 0 1 0 L forward, R forward
+// パターン 6: 0 1 1 0 L stop, R stop
+// パターン 7: 1 1 1 0 L stop, R stop
+// パターン 8: 0 0 0 1 L stop, R backward
+// パターン 9: 1 0 0 1 L forward, R backward
+// パターン 10: 0 1 0 1 L stop, R stop
+// パターン 11: 1 1 0 1 L stop, R stop
+// パターン 12: 0 0 1 1 L stop, R stop
+// パターン 13: 1 0 1 1 L forward, R stop
+// パターン 14: 0 1 1 1 L backward, R stop
+// パターン 15: 1 1 1 1 L stop, R stop
+// */
+//
+//   // 全16通りの組み合わせをテスト
+//   for(int i = 0; i < 16; i++) {
+//     // iの各ビットを各ピンに対応させる
+//     // bit 0 -> leftMotorPin0
+//     // bit 1 -> leftMotorPin1  
+//     // bit 2 -> rightMotorPin0
+//     // bit 3 -> rightMotorPin1
+//
+//     bool leftPin0State = (i & 0b0001) != 0;
+//     bool leftPin1State = (i & 0b0010) != 0;
+//     bool rightPin0State = (i & 0b0100) != 0;
+//     bool rightPin1State = (i & 0b1000) != 0;
+//
+//     digitalWrite(WheelController::leftMotorPin0, leftPin0State ? HIGH : LOW);
+//     digitalWrite(WheelController::leftMotorPin1, leftPin1State ? HIGH : LOW);
+//     digitalWrite(WheelController::rightMotorPin0, rightPin0State ? HIGH : LOW);
+//     digitalWrite(WheelController::rightMotorPin1, rightPin1State ? HIGH : LOW);
+//
+//     Serial.print("パターン ");
+//     Serial.print(i);
+//     Serial.print(": ");
+//     Serial.print(leftPin0State ? "1" : "0");
+//     Serial.print(" ");
+//     Serial.print(leftPin1State ? "1" : "0");
+//     Serial.print(" ");
+//     Serial.print(rightPin0State ? "1" : "0");
+//     Serial.print(" ");
+//     Serial.println(rightPin1State ? "1" : "0");
+//
+//     delay(5000);
+//   }
+//
+//   // テスト終了後は全てLOWに
+//   digitalWrite(WheelController::leftMotorPin0, LOW);
+//   digitalWrite(WheelController::leftMotorPin1, LOW);
+//   digitalWrite(WheelController::rightMotorPin0, LOW);
+//   digitalWrite(WheelController::rightMotorPin1, LOW);
+//
+//   Serial.println("テスト完了 - 全ピンLOWに設定");
 // }
+
+void loop() {
+  // setupで全て完了するため、loopは空
+}
+

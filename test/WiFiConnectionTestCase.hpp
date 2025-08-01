@@ -4,9 +4,9 @@
 class WiFiConnectionTestCase {
 public:
     static void runAllTests();
+    static void connect();
 
 private:
-    static void connect();
 };
 
 #endif // !_WIFICONNECTIONTESTCASE_

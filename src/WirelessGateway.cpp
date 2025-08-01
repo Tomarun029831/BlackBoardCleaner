@@ -1,32 +1,32 @@
-#include "../../update.hpp"
-#include "../../ENV.hpp"
-#include "../../lib/ScheduleGataway.hpp"
+#include "../update.hpp"
+#include "../ENV.hpp"
+#include "../lib/ScheduleGateway.hpp"
 #include <HTTPClient.h>
 #include <HardwareSerial.h>
 #include <WString.h>
 #include <WiFi.h>
 
-int WirelessGateway::setup() {
+bool WirelessGateway::setup() {
   Serial.printf("Connecting to WiFi SSID: %s\n", CONFIG::SSID);
   WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED) {
-    update();
     delay(1000);
     Serial.print(".");
   }
+
   Serial.println("\nWiFi connected!");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-  return 0;
+  return true;
 }
 
-int WirelessGateway::available() {
+bool WirelessGateway::available() {
   return WiFi.status() == WL_CONNECTED;
 }
 
 String WirelessGateway::receiveString() {
-  if (!available()) {
+  if (!WirelessGateway::available()) {
     Serial.println("WiFi not connected");
     return "";
   }

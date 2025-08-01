@@ -1,5 +1,5 @@
-#include "../../test/MotorManualOnWallTestCase.hpp"
-#include "../../lib/WheelController.hpp"
+#include "../test/MotorManualOnWallTestCase.hpp"
+#include "../lib/WheelController.hpp"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 

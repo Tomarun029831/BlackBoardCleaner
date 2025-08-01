@@ -1,5 +1,5 @@
-#include "../../test/HTTPResponseTestCase.hpp"
-#include "../../ENV.hpp"
+#include "../test/HTTPResponseTestCase.hpp"
+#include "../ENV.hpp"
 #include <HTTPClient.h>
 #include <Arduino.h>
 #include <WiFi.h>

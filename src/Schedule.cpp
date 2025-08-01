@@ -1,4 +1,4 @@
-#include "../../lib/Schedule.hpp"
+#include "../lib/Schedule.hpp"
 #include <stdlib.h>
 
 Schedule::Schedule(const unsigned char cmd, unsigned int *const hours, const unsigned int count):cmd(cmd), hours(hours), count(count) {}
