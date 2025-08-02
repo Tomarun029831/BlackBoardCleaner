@@ -28,6 +28,9 @@ Controller:
   WheelController
   AutoClean(HEIGHT, WIDTH)
 
+Memery:
+  MemeryAllocetor
+
 WCP:
   WCPCollection
 
