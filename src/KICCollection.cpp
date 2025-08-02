@@ -37,7 +37,7 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
     // extract kicHeader
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
     String kicHeaderStr = kicString.substring(begin, end);
-    strcpy(kicHeader, kicHeaderStr.c_str());
+    kicHeader = strdup(kicHeaderStr.c_str());
     begin = end + 1;
     if (strcmp(kicHeader, KICVERSION) != 0) return false;
 
@@ -46,20 +46,20 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
 
     // extract serverSendTime
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
-    String kicHeaderStr = kicString.substring(begin, end);
-    strcpy(kicHeader, kicHeaderStr.c_str());
+    String serverSendTimeStr = kicString.substring(begin, end);
+    serverSendTime = strdup(serverSendTimeStr.c_str());
     begin = end + 1;
 
     // extract boardSize
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
-    String kicHeaderStr = kicString.substring(begin, end);
-    strcpy(kicHeader, kicHeaderStr.c_str());
+    String boardSizeStr = kicString.substring(begin, end);
+    boardSize = strdup(boardSizeStr.c_str());
     begin = end + 1;
 
     // extract cleanDiagram
     end = kicString.indexOf(KICEND, begin);
-    String kicHeaderStr = kicString.substring(begin, end);
-    strcpy(kicHeader, kicHeaderStr.c_str());
+    String cleanDiagramStr = kicString.substring(begin, end);
+    cleanDiagram = strdup(cleanDiagramStr.c_str());
 
     return true;
 }
@@ -77,9 +77,9 @@ KICCollection::KICData *KICCollection::KICParser(const char *kicHeader, const ch
 
     // syntaxCheck boardSize
     if (boardSize == nullptr && strlen(boardSize) != BOARDSIZELENGTH) return nullptr;
-    char *heightSizeStr, *widthSizeStr;
-    strncpy(heightSizeStr, BOARDSIZELENGTH / 2, boardSize);
-    strncpy(widthSizeStr, BOARDSIZELENGTH / 2, boardSize + (BOARDSIZELENGTH / 2));
+    unsigned int segmentSize = BOARDSIZELENGTH / 2;
+    char *heightSizeStr = strndup(boardSize, segmentSize);
+    char *widthSizeStr = strndup(boardSize + segmentSize, segmentSize);
     unsigned int parsedHeightSize = atoi(heightSizeStr); // HACK:
     unsigned int parsedWidthSize = atoi(widthSizeStr); // HACK:
 
