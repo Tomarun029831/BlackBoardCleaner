@@ -3,7 +3,7 @@
 
 // KIC:V1;01437;01140334;008001200;20700090011001300;/
 
-namespace DiagramCollectionTestCase {
+namespace CleaningDiagramCollectionTestCase {
     static DaySchedule* createSchedule(char header, unsigned int* hours, unsigned int length) {
         if (hours == nullptr || length == 0) {
             return nullptr;
@@ -103,7 +103,7 @@ namespace DiagramCollectionTestCase {
         CleaningDiagram* expected_diagram = createCleaningDiagram(schedules, 2);
 
         CleaningDiagram *diagram = ((void *)0);
-        bool isSuccess = DiagramCollection::DiagramParser(testDiagramString, diagram);
+        bool isSuccess = DiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
         bool isPassed = assertCleaningDiagram(expected_diagram, diagram);
 
         freeDiagram(expected_diagram);
@@ -133,7 +133,7 @@ namespace DiagramCollectionTestCase {
         DaySchedule* testSchedules[] = {testSchedule0, testSchedule1};
         CleaningDiagram* diagram = createCleaningDiagram(testSchedules, 2);
 
-        bool isSuccess = DiagramCollection::DiagramParser(testDiagramString, diagram);
+        bool isSuccess = DiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
         bool isPassed = assertCleaningDiagram(expected_diagram, diagram);
 
         freeDiagram(expected_diagram);
@@ -175,7 +175,7 @@ namespace DiagramCollectionTestCase {
         unsigned int expectedHours[] = {800, 1700};
         DaySchedule* expected_schedule = createSchedule('2', expectedHours, 2);
 
-        DaySchedule* daySchedule = DiagramCollection::DiagramParser(testString);
+        DaySchedule* daySchedule = DiagramCollection::CleaningDiagramParser(testString);
         bool isPassed = assertDaySchedule(expected_schedule, daySchedule);
 
         freeSchedule(expected_schedule);

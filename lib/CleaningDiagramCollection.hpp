@@ -1,9 +1,9 @@
-#ifndef _SCHEDULECOLLECTION_
-#define _SCHEDULECOLLECTION_
+#ifndef _CLEANINGDIAGRAMCOLLECTION_
+#define _CLEANINGDIAGRAMCOLLECTION_
 
 #include <WString.h>
 
-namespace DiagramCollection {
+namespace CleaningDiagramCollection {
     struct DaySchedule {
         char header;
         unsigned int hours*;
@@ -21,13 +21,13 @@ namespace DiagramCollection {
      * if diagram == NULL then set newDiagram
      * else then update diagram
      * */
-    bool DiagramParser(String& diagramString, CleaningDiagram *diagram);
+    bool CleaningDiagramParser(String& diagramString, CleaningDiagram *diagram);
     void freeDiagram(CleaningDiagram *diagram);
 
     // === Schedule ===
-    DaySchedule *ScheduleParser(String& scheduleString);
+    DaySchedule ScheduleParser(String& scheduleString);
     bool setSchedule(DaySchedule schedule, CleaningDiagram diagram);
     void freeSchedule(char header, CleaningDiagram diagram);
 }
 
-#endif // _SCHEDULECOLLECTION_
+#endif // _CLEANINGDIAGRAMCOLLECTION_

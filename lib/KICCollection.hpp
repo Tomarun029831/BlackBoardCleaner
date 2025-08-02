@@ -1,12 +1,17 @@
 #ifndef _KICCollection_
 #define _KICCollection_
-#include "./DiagramCollection.hpp"
+#include "./CleaningDiagramCollection.hpp"
 #include <WString.h>
 
 namespace KICCollection {
-    constexpr char *KICVERSION = "KIC:V2";
-    constexpr char KICSEGMENTCHAR = ';';
-    constexpr char *KICEND = "/";
+    // KIC Syntax
+    inline constexpr const char KICVERSION[] = "KIC:V2";
+    inline constexpr char KICSEGMENTCHAR = ';';
+    inline constexpr const char KICEND[] = "/";
+
+    // data-size of KIC Payload
+    inline constexpr unsigned int SERVERSENDTIMELENGTH = 5;
+    inline constexpr unsigned int BOARDSIZELENGTH = 8; // 4(height) + 4(width)
 
     struct Board{
         unsigned int height;
@@ -14,13 +19,14 @@ namespace KICCollection {
     };
 
     struct KICData{
-        DaySchedule* serverSendTime;
+        CleaningDiagramCollection::DaySchedule serverSendTime;
         Board board;
-        CleaningDiagram diagram;
+        CleaningDiagramCollection::CleaningDiagram diagram;
     };
 
     KICData* convertToKIC(const String& kicString);
-    void KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char *cleanDiagram);
+    void freeKICData(KICData *data);
+    bool KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char *cleanDiagram);
     KICData* KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram);
 }
 

@@ -1,113 +1,100 @@
-// #include "../../lib/KIC.hpp"
-// #include "../../lib/SPool.hpp"
-// #include <HardwareSerial.h> // TODO: only for DEBUG
-//
-// // KIC:V1;01437;01140334;008001200;20700090011001300;/
-//
-// static Schedule* convertToSchedule(const String& block);
-//
-// KIC::KICINFO* KIC::convertToKIC(const String& kic) {
-//     KIC::KICINFO* convertedKIC = (KIC::KICINFO*) malloc(sizeof(KIC::KICINFO));
-//     if (convertedKIC == NULL) return NULL;
-//
-//     convertedKIC->spool = (SPool *)malloc(sizeof(SPool));
-//     if (convertedKIC->spool == NULL) return NULL;
-//
-//     Serial.print("convertToSPool() called with: ");
-//     Serial.println(kic);
-//
-//     // check KICEND at end of the string
-//     if (!kic.endsWith(KICEND)) {
-//       return nullptr;
-//     }
-//
-//     // devide the string with KICSEGMENTCHAR to extract kicHeader
-//     unsigned int begin = 0;
-//     String kicHeader = kic.substring(begin, kic.indexOf(KICSEGMENTCHAR, begin));
-//
-//     // devide the string with KICSEGMENTCHAR to extract timeToSyc
-//     begin = kic.indexOf(KICSEGMENTCHAR, begin) + 1;
-//     String timeToSyc = kic.substring(begin, kic.indexOf(KICSEGMENTCHAR, begin));
-//     convertedKIC->timestamp = convertToSchedule(timeToSyc);
-//
-//     unsigned int blackBoardHeight_cm = kic.substring(begin, begin + 3).toInt();
-//     convertedKIC->board.height = blackBoardHeight_cm;
-//     begin += 4;
-//     unsigned int blackBoardWidth_cm = kic.substring(begin, begin + 3).toInt();
-//     convertedKIC->board.width = blackBoardWidth_cm;
-//     begin += 4;
-//
-//     // kic += begin; // move kic pointer to next head of the block
-//     Serial.print("convertToSPool> header: ");
-//     Serial.println(kicHeader);
-//
-//     Serial.print("convertToSPool> timeHeader: ");
-//     Serial.println(timeToSyc);
-//
-//     Serial.print("convertToSPool> blackBoard height, width: ");
-//     Serial.print(blackBoardHeight_cm);
-//     Serial.print(", ");
-//     Serial.println(blackBoardWidth_cm);
-//
-//     Serial.println("convertToSPool> Schedules@");
-//
-//     // start loop to extract each schedule with KICSEGMENTCHAR
-//     unsigned int newCount = 0;
-//     Schedule *newSchedules = nullptr;
-//
-//     while (true) {
-//       if (!kic.substring(begin).compareTo("/")) { // 0: if String equals myString2
-//         // Serial.println("@");
-//         break;
-//       }
-//       begin = kic.indexOf(KICSEGMENTCHAR, begin+1) + 1;
-//       String scheduleBlock = kic.substring(begin, kic.indexOf(KICSEGMENTCHAR, begin));
-//
-//       Serial.print(">> ");
-//       Serial.println(scheduleBlock);
-//
-//       Schedule *schedule = convertToSchedule(scheduleBlock);
-//
-//       Serial.println("convertToSPool> converted(");
-//       Serial.print("cmd=");
-//       Serial.println(schedule->cmd);
-//       Serial.println("hours@");
-//       for(unsigned int i = 0; i < schedule->count; i++){
-//         Serial.println(schedule->hours[i]);
-//       }
-//       Serial.println("@");
-//       Serial.print("count=");
-//       Serial.println(schedule->count);
-//       Serial.println(")");
-//
-//       pushSchedule(schedule, convertedKIC->spool);
-//     }
-//
-//     return convertedKIC;
-//   }
-//
-// static Schedule* convertToSchedule(const String& block) {
-//     // Serial.print("convertToSchedule called with: ");
-//     // Serial.println(block);
-//     char cmd = block.charAt(0);
-//
-//     Schedule* schedule = (Schedule*) malloc(sizeof(Schedule));
-//     if (!schedule) return nullptr;
-//
-//     schedule->cmd = cmd;
-//     schedule->hours = nullptr;
-//     schedule->count = 0;
-//
-//     for (int i = 1; i + 4 <= block.length() + 1; i += 4) {
-//       String chunk = block.substring(i, i + 4);
-//       // Serial.print("convertToSchedule> queueHours call with ");
-//       // Serial.println(chunk);
-//
-//       int hour = atoi(chunk.c_str());
-//       pushHour(hour, schedule);
-//     }
-//
-//     // Serial.print("convertToSchedule> cmd=");
-//     // Serial.println(schedule->cmd);
-//     return schedule;
-//   }
+#include "../lib/KICCollection.hpp" // CleaningDiagramCollection, WString
+
+KICCollection::KICData *KICCollection::convertToKIC(const String& kicString) {
+    char *kicHeader, serverSendTime, boardSize, cleanDiagram;
+    KICCollection::KICLexer(kicString, kicHeader, serverSendTime, boardSize, cleanDiagram);
+    KICData *kicData = KICCollection::KICParser(kicHeader, serverSendTime, boardSize, cleanDiagram);
+    if (kicData == nullptr) return nullptr;
+    return kicData;
+}
+
+void KICCollection::freeKICData(KICData *data) {
+    free(data->serverSendTime.hours);
+    free(data->diagram.schedules);
+    free(data);
+}
+
+/*
+https://docs.arduino.cc/built-in-examples/strings/StringSubstring/
+substring(begin, end);
+
+String stringOne = "Content-Type: text/html";
+// you can also look for a substring in the middle of a string:
+if (stringOne.substring(14,18) == "text") {}
+
+https://docs.arduino.cc/built-in-examples/strings/StringIndexOf/
+
+String stringOne = "<HTML><HEAD><BODY>";
+int firstClosingBracket = stringOne.indexOf('>'); // 5
+*/
+
+bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char *cleanDiagram) {
+    if (kicString == NULL) return false;
+    unsigned int begin = 0, end = 0;
+
+    // TODO: follow DRY-principle
+
+    // extract kicHeader
+    end = kicString.indexOf(KICSEGMENTCHAR, begin);
+    String kicHeaderStr = kicString.substring(begin, end);
+    strcpy(kicHeader, kicHeaderStr.c_str());
+    begin = end + 1;
+    if (strcmp(kicHeader, KICVERSION) != 0) return false;
+
+    // check kicEnd
+    if (kicString.indexOf(kicEnd) == -1) return false;
+
+    // extract serverSendTime
+    end = kicString.indexOf(KICSEGMENTCHAR, begin);
+    String kicHeaderStr = kicString.substring(begin, end);
+    strcpy(kicHeader, kicHeaderStr.c_str());
+    begin = end + 1;
+
+    // extract boardSize
+    end = kicString.indexOf(KICSEGMENTCHAR, begin);
+    String kicHeaderStr = kicString.substring(begin, end);
+    strcpy(kicHeader, kicHeaderStr.c_str());
+    begin = end + 1;
+
+    // extract cleanDiagram
+    end = kicString.indexOf(KICEND, begin);
+    String kicHeaderStr = kicString.substring(begin, end);
+    strcpy(kicHeader, kicHeaderStr.c_str());
+
+    return true;
+}
+
+// KIC:V2;01437;01140334;008001200;20700090011001300;/
+
+KICCollection::KICData *KICCollection::KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram) {
+    if (kicString == nullptr && strcmp(kicHeader, KICVERSION) != 0) return nullptr;
+    namespace CDC = CleaningDiagramCollection;
+
+    // syntaxCheck serverSendTime
+    if (serverSendTime == nullptr && strlen(serverSendTime) != SERVERSENDTIMELENGTH) return nullptr;
+    CDC::DaySchedule parsedServerSendTime = CDC::ScheduleParser(serverSendTime);
+    if(parsedServerSendTime == nullptr) return nullptr;
+
+    // syntaxCheck boardSize
+    if (boardSize == nullptr && strlen(boardSize) != BOARDSIZELENGTH) return nullptr;
+    char *heightSizeStr, *widthSizeStr;
+    strncpy(heightSizeStr, BOARDSIZELENGTH / 2, boardSize);
+    strncpy(widthSizeStr, BOARDSIZELENGTH / 2, boardSize + (BOARDSIZELENGTH / 2));
+    unsigned int parsedHeightSize = atoi(heightSizeStr); // HACK:
+    unsigned int parsedWidthSize = atoi(widthSizeStr); // HACK:
+
+    // syntaxCheck cleanDiagram
+    if (cleanDiagram == nullptr) return nullptr;
+    CDC::cleanDiagram parsedDiagram = nullptr;
+    bool isSuccess = CDC::CleaningDiagramParser(cleanDiagram, parsedDiagram);
+    if(!isSuccess) return nullptr;
+
+    // set & allocate KICData
+    KICData *parsedKICData = calloc(1, sizeof(KICData));
+    parsedKICData->serverSendTime = parsedServerSendTime;
+    parsedKICData->board.height = parsedHeightSize;
+    parsedKICData->board.width = parsedWidthSize;
+    parsedKICData->parsedDiagram = parsedDiagram;
+
+    return parsedKICData;
+}
