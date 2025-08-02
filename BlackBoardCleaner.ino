@@ -18,13 +18,13 @@ KIC:
   DiagramCollection
 
 Connection:
-  HTTPClientTestCase
-  WiFiConnectorTestCase
+  HTTPClientTestCase - OK
+  WiFiConnectorTestCase - OK
   HTTPClient
   WiFiConnector
 
 Controller:
-  WheelControllerTestCase
+  WheelControllerTestCase - OK
   WheelController
   AutoClean(HEIGHT, WIDTH)
 
