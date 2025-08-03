@@ -1,12 +1,13 @@
 #include "../lib/HTTPBroker.hpp"
 #include "../lib/WiFiConnector.hpp"
 #include "../ENV.hpp"
+#include <HTTPClient.h>
 
 namespace HTTPBroker {
+    static HTTPClient http;
+
     void setup() {
-        while (!WiFiConnector::available()) {
-            WiFiConnector::setup();
-        }
+        WiFiConnector::setup();
     }
 
     bool available() {
@@ -14,6 +15,13 @@ namespace HTTPBroker {
     }
 
     String receiveString() {
+        http.begin(CONFIG::APIENDPOINT);
 
+        int httpCode = http.GET();
+        if (httpCode <= 0) return "";
+        String payload = http.getString();
+
+        http.end();
+        return payload;
     }
 }
