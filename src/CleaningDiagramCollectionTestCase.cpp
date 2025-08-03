@@ -225,7 +225,7 @@ namespace CleaningDiagramCollectionTestCase {
         return isPassed;
     }
 
-    bool testFreeSchedule() {
+    bool testDeleteSchedule() {
         unsigned int hours0[] = {800, 1200};
         unsigned int hours1[] = {700, 900, 1100, 1300};
         CleaningDiagramCollection::DaySchedule* schedule0 = createSchedule('0', hours0, 2);
@@ -257,6 +257,6 @@ namespace CleaningDiagramCollectionTestCase {
         Serial.printf(" - testFreeDiagram %s\n", testFreeDiagram() ? "passed" : "failed");
         Serial.printf(" - testScheduleParser %s\n", testScheduleParser() ? "passed" : "failed");
         Serial.printf(" - testSetSchedule %s\n", testSetSchedule() ? "passed" : "failed");
-        Serial.printf(" - testFreeSchedule %s\n", testFreeSchedule() ? "passed" : "failed");
+        Serial.printf(" - testDeleteSchedule %s\n", testDeleteSchedule() ? "passed" : "failed");
     }
 }

@@ -132,7 +132,7 @@ namespace KICCollectionTestCase {
         const char *expected_kicHeader = KICCollection::KICVERSION;
         const char *expected_serverSendTime = "01437";
         const char *expected_boardSize = "01140334";
-        const char *expected_cleanDiagram = "008001200;20700090011001300;";
+        const char *expected_cleanDiagram = "008001200;20700090011001300;/";
 
         char *kicHeader = "";
         char *serverSendTime = "";
@@ -159,7 +159,7 @@ namespace KICCollectionTestCase {
         const char *test_kicHeader = KICCollection::KICVERSION;
         const char *test_serverSendTime = "01437";
         const char *test_boardSize = "01140334";
-        const char *test_cleanDiagram = "008001200;20700090011001300;";
+        const char *test_cleanDiagram = "008001200;20700090011001300;/";
 
         unsigned int serverSendHour[] = {1437};
         CleaningDiagramCollection::DaySchedule* expectedServerSendTime = createDaySchedule('0', serverSendHour, 1);
