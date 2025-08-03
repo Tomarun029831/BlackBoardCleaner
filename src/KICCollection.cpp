@@ -57,8 +57,9 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
     begin = end + 1;
 
     // extract cleanDiagram
-    end = kicString.indexOf(KICEND, begin);
-    String cleanDiagramStr = kicString.substring(begin, end);
+    // end = kicString.indexOf(KICEND, begin);
+    // String cleanDiagramStr = kicString.substring(begin, end);
+    String cleanDiagramStr = kicString.substring(begin);
     cleanDiagram = strdup(cleanDiagramStr.c_str());
 
     return true;

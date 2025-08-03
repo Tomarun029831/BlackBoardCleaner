@@ -17,17 +17,14 @@ namespace CleaningDiagramCollection {
 
     // === Diagram ===
 
-    /*
-     * if diagram == NULL then set newDiagram
-     * else then update diagram
-     * */
     bool CleaningDiagramParser(String& diagramString, CleaningDiagram *diagram);
     void freeDiagram(CleaningDiagram *diagram);
 
     // === Schedule ===
     DaySchedule ScheduleParser(String& scheduleString);
-    bool setSchedule(DaySchedule schedule, CleaningDiagram diagram);
-    void freeSchedule(char header, CleaningDiagram diagram);
+    void freeSchedule(DaySchedule *schedule);
+    bool setSchedule(DaySchedule schedule, CleaningDiagram& diagram);
+    void deleteSchedule(char header, CleaningDiagram& diagram);
 }
 
 #endif // _CLEANINGDIAGRAMCOLLECTION_

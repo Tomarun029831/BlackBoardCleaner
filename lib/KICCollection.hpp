@@ -7,11 +7,12 @@ namespace KICCollection {
     // KIC Syntax
     inline constexpr const char KICVERSION[] = "KIC:V2";
     inline constexpr char KICSEGMENTCHAR = ';';
-    inline constexpr const char KICEND[] = "/";
+    inline constexpr char KICEND = '/';
 
     // data-size of KIC Payload
     inline constexpr unsigned int SERVERSENDTIMELENGTH = 5;
     inline constexpr unsigned int BOARDSIZELENGTH = 8; // 4(height) + 4(width)
+    inline constexpr unsigned int DAYSCHEDULELENGTH = 4;
 
     struct Board{
         unsigned int height;
