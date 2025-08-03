@@ -20,8 +20,8 @@ KIC:
 Connection:
   HTTPClientTestCase - OK
   WiFiConnectorTestCase - OK
-  HTTPClient
-  WiFiConnector
+  HTTPClient - OK
+  WiFiConnector - OK
 
 Controller:
   WheelControllerTestCase - OK
