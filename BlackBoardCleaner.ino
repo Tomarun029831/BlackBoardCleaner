@@ -14,8 +14,8 @@
 
 KIC:
   KICCollectionTestCase - OK
-  KICCollection
-  DiagramCollection
+  KICCollection - NEED TEST
+  DiagramCollection - NEED TEST
 
 Connection:
   HTTPClientTestCase - OK
