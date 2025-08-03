@@ -25,7 +25,7 @@ Connection:
 
 Controller:
   WheelControllerTestCase - OK
-  WheelController
+  WheelController - NEED MANUAL TEST
   AutoClean(HEIGHT, WIDTH)
 
 Memery:
