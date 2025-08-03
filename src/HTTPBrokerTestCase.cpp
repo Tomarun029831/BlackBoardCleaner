@@ -1,24 +1,24 @@
-#include "../test/HTTPClientTestCase.hpp"
+#include "../test/HTTPBrokerTestCase.hpp"
 #include <WString.h>
 #include <HardwareSerial.h>
 
-namespace HTTPClientTestCase {
+namespace HTTPBrokerTestCase {
     static bool assertString(String str1, String str2) {
         return str1 == str2;
     }
 
     bool testSetup() {
-        HTTPClient::setup();
-        return HTTPClient::available();
+        HTTPBroker::setup();
+        return HTTPBroker::available();
     }
 
     bool testAvailable() {
-        return HTTPClient::available();
+        return HTTPBroker::available();
     }
 
     bool testReceiveString() {
         String expected_string = "KIC:V1;01437;01140334;008001200;20700090011001300;/";
-        String string = HTTPClient::receiveString();
+        String string = HTTPBroker::receiveString();
 
         return assertString(expected_string, string);
     }

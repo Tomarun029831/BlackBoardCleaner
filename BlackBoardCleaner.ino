@@ -1,7 +1,7 @@
 // === my tests ===
 #include "test/KICCollectionTestCase.hpp"
 #include "test/WiFiConnectorTestCase.hpp"
-#include "test/HTTPClientTestCase.hpp"
+#include "test/HTTPBrokerTestCase.hpp"
 #include "test/DiagramCollectionTestCase.hpp"
 #include "test/WheelControllerManualTestCase.hpp"
 
@@ -53,7 +53,7 @@ void setup() {
   KICCollectionTestCase::runAllTests();
   DiagramCollectionTestCase::runAllTests();
   WiFiConnectorTestCase::runAllTests();
-  HTTPClientTestCase::runAllTests();
+  HTTPBrokerTestCase::runAllTests();
   WheeelControllerManualTestCase::runAllTests();
 }
 
