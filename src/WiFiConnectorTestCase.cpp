@@ -1,4 +1,5 @@
 #include "../test/WiFiConnectorTestCase.hpp"
+#include "../lib/WiFiConnector.hpp"
 #include <HardwareSerial.h>
 
 namespace WiFiConnectorTestCase {

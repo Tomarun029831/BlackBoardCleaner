@@ -1,7 +1,7 @@
 #include "../lib/KICCollection.hpp" // CleaningDiagramCollection, WString
 
 KICCollection::KICData *KICCollection::convertToKIC(const String& kicString) {
-    char *kicHeader, serverSendTime, boardSize, cleanDiagram;
+    char *kicHeader, *serverSendTime, *boardSize, *cleanDiagram;
     KICCollection::KICLexer(kicString, kicHeader, serverSendTime, boardSize, cleanDiagram);
     KICData *kicData = KICCollection::KICParser(kicHeader, serverSendTime, boardSize, cleanDiagram);
     if (kicData == nullptr) return nullptr;
@@ -42,7 +42,7 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
     if (strcmp(kicHeader, KICVERSION) != 0) return false;
 
     // check kicEnd
-    if (kicString.indexOf(kicEnd) == -1) return false;
+    if (kicString.indexOf(KICEND) == -1) return false;
 
     // extract serverSendTime
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
@@ -68,13 +68,14 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
 // KIC:V2;01437;01140334;008001200;20700090011001300;/
 
 KICCollection::KICData *KICCollection::KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram) {
-    if (kicString == nullptr && strcmp(kicHeader, KICVERSION) != 0) return nullptr;
+    if (strcmp(kicHeader, KICVERSION) != 0) return nullptr;
     namespace CDC = CleaningDiagramCollection;
 
     // syntaxCheck serverSendTime
     if (serverSendTime == nullptr && strlen(serverSendTime) != SERVERSENDTIMELENGTH) return nullptr;
-    CDC::DaySchedule parsedServerSendTime = CDC::ScheduleParser(serverSendTime);
-    if(parsedServerSendTime == nullptr) return nullptr;
+    String temp(serverSendTime); // HACK:
+    CDC::DaySchedule parsedServerSendTime = CDC::ScheduleParser(temp);
+    if(parsedServerSendTime.length == 0) return nullptr;
 
     // syntaxCheck boardSize
     if (boardSize == nullptr && strlen(boardSize) != BOARDSIZELENGTH) return nullptr;
@@ -86,16 +87,17 @@ KICCollection::KICData *KICCollection::KICParser(const char *kicHeader, const ch
 
     // syntaxCheck cleanDiagram
     if (cleanDiagram == nullptr) return nullptr;
-    CDC::cleanDiagram parsedDiagram = nullptr;
-    bool isSuccess = CDC::CleaningDiagramParser(cleanDiagram, parsedDiagram);
+    CDC::CleaningDiagram parsedDiagram = {nullptr, 0};
+    String temp1(cleanDiagram); // HACK:
+    bool isSuccess = CDC::CleaningDiagramParser(temp1, &parsedDiagram);
     if(!isSuccess) return nullptr;
 
     // set & allocate KICData
-    KICData *parsedKICData = calloc(1, sizeof(KICData));
+    KICData *parsedKICData = (KICData *)calloc(1, sizeof(KICData));
     parsedKICData->serverSendTime = parsedServerSendTime;
     parsedKICData->board.height = parsedHeightSize;
     parsedKICData->board.width = parsedWidthSize;
-    parsedKICData->parsedDiagram = parsedDiagram;
+    parsedKICData->diagram = parsedDiagram;
 
     return parsedKICData;
 }

@@ -2,7 +2,7 @@
 #include "test/KICCollectionTestCase.hpp"
 #include "test/WiFiConnectorTestCase.hpp"
 #include "test/HTTPBrokerTestCase.hpp"
-#include "test/DiagramCollectionTestCase.hpp"
+#include "test/CleaningDiagramCollectionTestCase.hpp"
 #include "test/WheelControllerManualTestCase.hpp"
 
 // === Arduino  ===
@@ -51,7 +51,7 @@ void setup() {
 
   // === Test ===
   KICCollectionTestCase::runAllTests();
-  DiagramCollectionTestCase::runAllTests();
+  CleaningDiagramCollectionTestCase::runAllTests();
   WiFiConnectorTestCase::runAllTests();
   HTTPBrokerTestCase::runAllTests();
   WheeelControllerManualTestCase::runAllTests();

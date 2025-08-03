@@ -1,7 +1,7 @@
-#ifndef _DIAGRAMCOLLECTIONTESTCASE_
-#define _DIAGRAMCOLLECTIONTESTCASE_
+#ifndef _CLEANINGDIAGRAMCOLLECTIONTESTCASE_
+#define _CLEANINGDIAGRAMCOLLECTIONTESTCASE_
 
-namespace DiagramCollectionTestCase {
+namespace CleaningDiagramCollectionTestCase {
     bool testDiagramParserWithNULL();
     bool testDiagramParserWithNONULL();
     bool testScheduleParser();
@@ -10,4 +10,4 @@ namespace DiagramCollectionTestCase {
     void runAllTests();
 }
 
-#endif // !_DIAGRAMCOLLECTIONTESTCASE_
+#endif // !_CLEANINGDIAGRAMCOLLECTIONTESTCASE_

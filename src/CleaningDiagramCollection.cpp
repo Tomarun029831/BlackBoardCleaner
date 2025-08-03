@@ -16,23 +16,23 @@ bool CleaningDiagramCollection::CleaningDiagramParser(String& diagramString, Cle
     if(diagramString == nullptr) return false;
     unsigned int begin = 0, end = 0;
     bool flagsToFree[7] = {true};
-    if (diagram == nullptr) diagram = calloc(1, sizeof(CleaningDiagram));
+    if (diagram == nullptr) diagram = (CleaningDiagram *)calloc(1, sizeof(CleaningDiagram));
 
-    while (diagram.charAt(end + 1) != KICCollection::KICEND) { // LL(1)
+    while (diagramString.charAt(end + 1) != KICCollection::KICEND) { // LL(1)
         end = diagramString.indexOf(KICCollection::KICSEGMENTCHAR, begin);
         String scheduleString = diagramString.substring(begin, end);
         DaySchedule schedule = ScheduleParser(scheduleString);
-        if (schedule == nullptr) return false;
+        if (schedule.length == 0) return false;
 
         unsigned int headerToInt = schedule.header - '0';
         flagsToFree[headerToInt] = {false};
 
-        bool isSuccess = setSchedule(schedule, diagram);
+        bool isSuccess = setSchedule(schedule, *diagram);
         if (!isSuccess) return false;
     }
 
     for(unsigned int header = 0; header < 7; header++)
-        if (flagsToFree[header]) deleteSchedule(header, diagram);
+        if (flagsToFree[header]) deleteSchedule(header, *diagram);
 
     return true;
 }
@@ -48,14 +48,14 @@ void CleaningDiagramCollection::freeDiagram(CleaningDiagram *diagram) {
 // 008001200
 // 20700090011001300
 CleaningDiagramCollection::DaySchedule CleaningDiagramCollection::ScheduleParser(String& scheduleString) {
-    DaySchedule parsedSchedule;
+    DaySchedule parsedSchedule = {'\0', nullptr, 0};
     unsigned int begin = 1, end = begin + KICCollection::DAYSCHEDULELENGTH;
 
     unsigned int scheduleAmount = (scheduleString.length() - 1) / KICCollection::DAYSCHEDULELENGTH; // str_length - header_length
     // extract header
     parsedSchedule.header = scheduleString.charAt(0);
     // allocate schedules
-    parsedSchedule.hours = calloc(scheduleAmount, sizeof(unsigned int));
+    parsedSchedule.hours = (unsigned int *)calloc(scheduleAmount, sizeof(unsigned int));
     parsedSchedule.length = scheduleAmount;
     // parse String
     for (unsigned int i = 0; i < scheduleAmount; i++) {
@@ -82,7 +82,7 @@ bool CleaningDiagramCollection::setSchedule(DaySchedule schedule, CleaningDiagra
 
     if(isWritten) return true;
 
-    DaySchedule *newPtr = realloc(diagram.schedules, (diagram.length + 1) * sizeof(DaySchedule));
+    DaySchedule *newPtr = (DaySchedule *)realloc(diagram.schedules, (diagram.length + 1) * sizeof(DaySchedule));
     if(newPtr == ((void *)0)) return false;
     diagram.schedules = newPtr;
 

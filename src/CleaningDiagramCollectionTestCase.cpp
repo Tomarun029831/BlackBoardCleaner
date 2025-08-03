@@ -1,15 +1,16 @@
-#include "../test/DiagramCollectionTestCase.hpp"
+#include "../test/CleaningDiagramCollectionTestCase.hpp"
+#include "../lib/CleaningDiagramCollection.hpp"
 #include <HardwareSerial.h>
 
 // KIC:V1;01437;01140334;008001200;20700090011001300;/
 
 namespace CleaningDiagramCollectionTestCase {
-    static DaySchedule* createSchedule(char header, unsigned int* hours, unsigned int length) {
+    static CleaningDiagramCollection::DaySchedule* createSchedule(char header, unsigned int* hours, unsigned int length) {
         if (hours == nullptr || length == 0) {
             return nullptr;
         }
 
-        DaySchedule* schedule = (DaySchedule*)calloc(1, sizeof(DaySchedule));
+        CleaningDiagramCollection::DaySchedule* schedule = (CleaningDiagramCollection::DaySchedule*)calloc(1, sizeof(CleaningDiagramCollection::DaySchedule));
         if (schedule == nullptr) {
             return nullptr;
         }
@@ -30,17 +31,17 @@ namespace CleaningDiagramCollectionTestCase {
         return schedule;
     }
 
-    static CleaningDiagram* createCleaningDiagram(DaySchedule** schedules, unsigned int scheduleCount) {
+        static CleaningDiagramCollection::CleaningDiagram* createCleaningDiagram(CleaningDiagramCollection::DaySchedule** schedules, unsigned int scheduleCount) {
         if (schedules == nullptr || scheduleCount == 0) {
             return nullptr;
         }
 
-        CleaningDiagram* diagram = (CleaningDiagram*)calloc(1, sizeof(CleaningDiagram));
+        CleaningDiagramCollection::CleaningDiagram* diagram = (CleaningDiagramCollection::CleaningDiagram*)calloc(1, sizeof(CleaningDiagramCollection::CleaningDiagram));
         if (diagram == nullptr) {
             return nullptr;
         }
 
-        diagram->schedules = (DaySchedule*)calloc(scheduleCount, sizeof(DaySchedule));
+        diagram->schedules = (CleaningDiagramCollection::DaySchedule*)calloc(scheduleCount, sizeof(CleaningDiagramCollection::DaySchedule));
         if (diagram->schedules == nullptr) {
             free(diagram);
             return nullptr;
@@ -63,7 +64,7 @@ namespace CleaningDiagramCollectionTestCase {
         return diagram;
     }
 
-    static bool assertDaySchedule(const DaySchedule* a, const DaySchedule* b) {
+    static bool assertDaySchedule(const CleaningDiagramCollection::DaySchedule* a, const CleaningDiagramCollection::DaySchedule* b) {
         if (a == nullptr || b == nullptr) return false;
         if (a->header != b->header) return false;
         if (a->length != b->length) return false;
@@ -74,7 +75,7 @@ namespace CleaningDiagramCollectionTestCase {
         return true;
     }
 
-    static bool assertCleaningDiagram(CleaningDiagram* diagram1, CleaningDiagram* diagram2) {
+    static bool assertCleaningDiagram(CleaningDiagramCollection::CleaningDiagram* diagram1, CleaningDiagramCollection::CleaningDiagram* diagram2) {
         if (diagram1 == nullptr || diagram2 == nullptr) return false;
         if (diagram1->length != diagram2->length) return false;
 
@@ -91,19 +92,19 @@ namespace CleaningDiagramCollectionTestCase {
         String testDiagramString = "008001200;20700090011001300;";
 
         unsigned int emptyHours[] = {};
-        DaySchedule* schedule0 = createSchedule('0', emptyHours, 0);
-        DaySchedule* schedule1 = createSchedule('2', emptyHours, 0);
+        CleaningDiagramCollection::DaySchedule* schedule0 = createSchedule('0', emptyHours, 0);
+        CleaningDiagramCollection::DaySchedule* schedule1 = createSchedule('2', emptyHours, 0);
 
         schedule0->length = 2;
         schedule1->length = 4;
         schedule0->hours = (unsigned int*)calloc(2, sizeof(unsigned int));
         schedule1->hours = (unsigned int*)calloc(4, sizeof(unsigned int));
 
-        DaySchedule* schedules[] = {schedule0, schedule1};
-        CleaningDiagram* expected_diagram = createCleaningDiagram(schedules, 2);
+        CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
+        CleaningDiagramCollection::CleaningDiagram* expected_diagram = createCleaningDiagram(schedules, 2);
 
-        CleaningDiagram *diagram = ((void *)0);
-        bool isSuccess = DiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
+        CleaningDiagramCollection::CleaningDiagram *diagram = nullptr;
+        bool isSuccess = CleaningDiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
         bool isPassed = assertCleaningDiagram(expected_diagram, diagram);
 
         freeDiagram(expected_diagram);
@@ -119,21 +120,21 @@ namespace CleaningDiagramCollectionTestCase {
 
         unsigned int hours0[] = {800, 1200};
         unsigned int hours1[] = {700, 900, 1100, 1300};
-        DaySchedule* expectedSchedule0 = createSchedule('0', hours0, 2);
-        DaySchedule* expectedSchedule1 = createSchedule('2', hours1, 4);
+        CleaningDiagramCollection::DaySchedule* expectedSchedule0 = createSchedule('0', hours0, 2);
+        CleaningDiagramCollection::DaySchedule* expectedSchedule1 = createSchedule('2', hours1, 4);
 
-        DaySchedule* expectedSchedules[] = {expectedSchedule0, expectedSchedule1};
-        CleaningDiagram* expected_diagram = createCleaningDiagram(expectedSchedules, 2);
+        CleaningDiagramCollection::DaySchedule* expectedSchedules[] = {expectedSchedule0, expectedSchedule1};
+        CleaningDiagramCollection::CleaningDiagram* expected_diagram = createCleaningDiagram(expectedSchedules, 2);
 
         unsigned int testHours0[] = {800, 1600};
         unsigned int testHours1[] = {700, 900, 1200, 1300};
-        DaySchedule* testSchedule0 = createSchedule('0', testHours0, 2);
-        DaySchedule* testSchedule1 = createSchedule('3', testHours1, 4);
+        CleaningDiagramCollection::DaySchedule* testSchedule0 = createSchedule('0', testHours0, 2);
+        CleaningDiagramCollection::DaySchedule* testSchedule1 = createSchedule('3', testHours1, 4);
 
-        DaySchedule* testSchedules[] = {testSchedule0, testSchedule1};
-        CleaningDiagram* diagram = createCleaningDiagram(testSchedules, 2);
+        CleaningDiagramCollection::DaySchedule* testSchedules[] = {testSchedule0, testSchedule1};
+        CleaningDiagramCollection::CleaningDiagram* diagram = createCleaningDiagram(testSchedules, 2);
 
-        bool isSuccess = DiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
+        bool isSuccess = CleaningDiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
         bool isPassed = assertCleaningDiagram(expected_diagram, diagram);
 
         freeDiagram(expected_diagram);
@@ -149,11 +150,11 @@ namespace CleaningDiagramCollectionTestCase {
     bool testFreeDiagram() {
         unsigned int hours0[] = {800, 1200};
         unsigned int hours1[] = {700, 900, 1100, 1300};
-        DaySchedule* schedule0 = createSchedule('0', hours0, 2);
-        DaySchedule* schedule1 = createSchedule('3', hours1, 4);
+        CleaningDiagramCollection::DaySchedule* schedule0 = createSchedule('0', hours0, 2);
+        CleaningDiagramCollection::DaySchedule* schedule1 = createSchedule('3', hours1, 4);
 
-        DaySchedule* schedules[] = {schedule0, schedule1};
-        CleaningDiagram* test_diagram = createCleaningDiagram(schedules, 2);
+        CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
+        CleaningDiagramCollection::CleaningDiagram* test_diagram = createCleaningDiagram(schedules, 2);
 
         freeDiagram(test_diagram);
         bool isPassed = false;
@@ -173,13 +174,14 @@ namespace CleaningDiagramCollectionTestCase {
         String testString = "208001700";
 
         unsigned int expectedHours[] = {800, 1700};
-        DaySchedule* expected_schedule = createSchedule('2', expectedHours, 2);
+        CleaningDiagramCollection::DaySchedule* expected_schedule = createSchedule('2', expectedHours, 2);
 
-        DaySchedule* daySchedule = DiagramCollection::CleaningDiagramParser(testString);
+        CleaningDiagramCollection::DaySchedule* daySchedule = new CleaningDiagramCollection::DaySchedule{CleaningDiagramCollection::ScheduleParser(testString)};
         bool isPassed = assertDaySchedule(expected_schedule, daySchedule);
 
         freeSchedule(expected_schedule);
-        freeSchedule(daySchedule);
+        delete daySchedule;
+        // freeSchedule(daySchedule);
 
         return isPassed;
     }
@@ -187,27 +189,27 @@ namespace CleaningDiagramCollectionTestCase {
     bool testSetSchedule() {
         unsigned int hours0[] = {800, 1200};
         unsigned int hours1[] = {700, 900, 1100, 1300};
-        DaySchedule* schedule0 = createSchedule('0', hours0, 2);
-        DaySchedule* schedule1 = createSchedule('2', hours1, 4);
+        CleaningDiagramCollection::DaySchedule* schedule0 = createSchedule('0', hours0, 2);
+        CleaningDiagramCollection::DaySchedule* schedule1 = createSchedule('2', hours1, 4);
 
-        DaySchedule* schedules[] = {schedule0, schedule1};
-        CleaningDiagram* test_diagram = createCleaningDiagram(schedules, 2);
+        CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
+        CleaningDiagramCollection::CleaningDiagram* test_diagram = createCleaningDiagram(schedules, 2);
 
         unsigned int expectedHours0[] = {800, 1000, 1200, 1300};
         unsigned int expectedHours1[] = {700, 1100};
-        DaySchedule* expectedSchedule0 = createSchedule('0', expectedHours0, 4);
-        DaySchedule* expectedSchedule1 = createSchedule('2', expectedHours1, 2);
+        CleaningDiagramCollection::DaySchedule* expectedSchedule0 = createSchedule('0', expectedHours0, 4);
+        CleaningDiagramCollection::DaySchedule* expectedSchedule1 = createSchedule('2', expectedHours1, 2);
 
-        DaySchedule* expectedSchedules[] = {expectedSchedule0, expectedSchedule1};
-        CleaningDiagram* expected_diagram = createCleaningDiagram(expectedSchedules, 2);
+        CleaningDiagramCollection::DaySchedule* expectedSchedules[] = {expectedSchedule0, expectedSchedule1};
+        CleaningDiagramCollection::CleaningDiagram* expected_diagram = createCleaningDiagram(expectedSchedules, 2);
 
         unsigned int newHours0[] = {800, 1000, 1200, 1300};
         unsigned int newHours1[] = {700, 1100};
-        DaySchedule* newSchedule0 = createSchedule('0', newHours0, 4);
-        DaySchedule* newSchedule1 = createSchedule('2', newHours1, 2);
+        CleaningDiagramCollection::DaySchedule* newSchedule0 = createSchedule('0', newHours0, 4);
+        CleaningDiagramCollection::DaySchedule* newSchedule1 = createSchedule('2', newHours1, 2);
 
-        setSchedule(newSchedule0, test_diagram);
-        setSchedule(newSchedule1, test_diagram);
+        setSchedule(*newSchedule0, *test_diagram);
+        setSchedule(*newSchedule1, *test_diagram);
 
         bool isPassed = assertCleaningDiagram(test_diagram, expected_diagram);
 
@@ -226,17 +228,17 @@ namespace CleaningDiagramCollectionTestCase {
     bool testFreeSchedule() {
         unsigned int hours0[] = {800, 1200};
         unsigned int hours1[] = {700, 900, 1100, 1300};
-        DaySchedule* schedule0 = createSchedule('0', hours0, 2);
-        DaySchedule* schedule1 = createSchedule('2', hours1, 4);
+        CleaningDiagramCollection::DaySchedule* schedule0 = createSchedule('0', hours0, 2);
+        CleaningDiagramCollection::DaySchedule* schedule1 = createSchedule('2', hours1, 4);
 
-        DaySchedule* schedules[] = {schedule0, schedule1};
-        CleaningDiagram* test_diagram = createCleaningDiagram(schedules, 2);
+        CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
+        CleaningDiagramCollection::CleaningDiagram* test_diagram = createCleaningDiagram(schedules, 2);
 
-        DaySchedule* expectedSchedules[] = {nullptr, schedule1};
-        CleaningDiagram* expected_diagram = createCleaningDiagram(expectedSchedules, 2);
+        CleaningDiagramCollection::DaySchedule* expectedSchedules[] = {nullptr, schedule1};
+        CleaningDiagramCollection::CleaningDiagram* expected_diagram = createCleaningDiagram(expectedSchedules, 2);
 
-        setSchedule('0', test_diagram);
-        setSchedule('1', test_diagram);
+        deleteSchedule('0', *test_diagram);
+        deleteSchedule('1', *test_diagram);
 
         bool isPassed = !assertCleaningDiagram(test_diagram, expected_diagram);
 

@@ -1,16 +1,17 @@
 #include "../test/KICCollectionTestCase.hpp"
 #include "../lib/KICCollection.hpp"
+#include "../lib/CleaningDiagramCollection.hpp"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <WString.h>
 
 namespace KICCollectionTestCase {
-    static DaySchedule* createDaySchedule(char header, unsigned int* hours, unsigned int length) {
+    static CleaningDiagramCollection::DaySchedule* createDaySchedule(char header, unsigned int* hours, unsigned int length) {
         if (hours == nullptr && length > 0) {
             return nullptr;
         }
 
-        DaySchedule* schedule = (DaySchedule*)calloc(1, sizeof(DaySchedule));
+        CleaningDiagramCollection::DaySchedule* schedule = (CleaningDiagramCollection::DaySchedule*)calloc(1, sizeof(CleaningDiagramCollection::DaySchedule));
         if (schedule == nullptr) {
             return nullptr;
         }
@@ -35,15 +36,15 @@ namespace KICCollectionTestCase {
         return schedule;
     }
 
-    static Board createBoard(unsigned int height, unsigned int width) {
-        Board board;
+    static KICCollection::Board createBoard(unsigned int height, unsigned int width) {
+        KICCollection::Board board;
         board.height = height;
         board.width = width;
         return board;
     }
 
-    static CleaningDiagram createCleaningDiagram(DaySchedule** schedules, unsigned int scheduleCount) {
-        CleaningDiagram diagram;
+    static CleaningDiagramCollection::CleaningDiagram createCleaningDiagram(CleaningDiagramCollection::DaySchedule** schedules, unsigned int scheduleCount) {
+        CleaningDiagramCollection::CleaningDiagram diagram;
         diagram.length = scheduleCount;
 
         if (scheduleCount == 0 || schedules == nullptr) {
@@ -51,7 +52,7 @@ namespace KICCollectionTestCase {
             return diagram;
         }
 
-        diagram.schedules = (DaySchedule*)calloc(scheduleCount, sizeof(DaySchedule));
+        diagram.schedules = (CleaningDiagramCollection::DaySchedule*)calloc(scheduleCount, sizeof(CleaningDiagramCollection::DaySchedule));
         if (diagram.schedules == nullptr) {
             diagram.length = 0;
             return diagram;
@@ -75,13 +76,13 @@ namespace KICCollectionTestCase {
         return diagram;
     }
 
-    static KICData* createKICData(DaySchedule* serverSendTime, Board board, CleaningDiagram diagram) {
-        KICData* kicData = (KICData*)calloc(1, sizeof(KICData));
+    static KICCollection::KICData* createKICData(CleaningDiagramCollection::DaySchedule* serverSendTime, KICCollection::Board board, CleaningDiagramCollection::CleaningDiagram diagram) {
+        KICCollection::KICData* kicData = (KICCollection::KICData*)calloc(1, sizeof(KICCollection::KICData));
         if (kicData == nullptr) {
             return nullptr;
         }
 
-        kicData->serverSendTime = serverSendTime;
+        kicData->serverSendTime = *serverSendTime;
         kicData->board = board;
         kicData->diagram = diagram;
 
@@ -93,7 +94,7 @@ namespace KICCollectionTestCase {
         return strcmp(str1, str2) == 0;
     }
 
-    static bool assertDaySchedule(const DaySchedule* a, const DaySchedule* b) {
+    static bool assertDaySchedule(const CleaningDiagramCollection::DaySchedule* a, const CleaningDiagramCollection::DaySchedule* b) {
         if (a == nullptr || b == nullptr) return false;
         if (a->header != b->header) return false;
         if (a->length != b->length) return false;
@@ -104,11 +105,11 @@ namespace KICCollectionTestCase {
         return true;
     }
 
-    static bool assertKICData(const KICData *data1, const KICData *data2) {
+    static bool assertKICData(const KICCollection::KICData *data1, const KICCollection::KICData *data2) {
         if (data1 == nullptr || data2 == nullptr) return false;
 
         // check serverSendTime (DaySchedule*)
-        if (!assertDaySchedule(data1->serverSendTime, data2->serverSendTime)) return false;
+        if (!assertDaySchedule(&(data1->serverSendTime), &(data2->serverSendTime))) return false;
 
         // check Board
         if (data1->board.height != data2->board.height) return false;
@@ -128,7 +129,7 @@ namespace KICCollectionTestCase {
 
     bool testKICLexer(){
         String testString = "KIC:V2;01437;01140334;008001200;20700090011001300;/";
-        const char *expected_kicHeader = KICVERSION;
+        const char *expected_kicHeader = KICCollection::KICVERSION;
         const char *expected_serverSendTime = "01437";
         const char *expected_boardSize = "01140334";
         const char *expected_cleanDiagram = "008001200;20700090011001300;";
@@ -155,27 +156,27 @@ namespace KICCollectionTestCase {
     }
 
     bool testKICParser() {
-        const char *test_kicHeader = KICVERSION;
+        const char *test_kicHeader = KICCollection::KICVERSION;
         const char *test_serverSendTime = "01437";
         const char *test_boardSize = "01140334";
         const char *test_cleanDiagram = "008001200;20700090011001300;";
 
         unsigned int serverSendHour[] = {1437};
-        DaySchedule* expectedServerSendTime = createDaySchedule('0', serverSendHour, 1);
+        CleaningDiagramCollection::DaySchedule* expectedServerSendTime = createDaySchedule('0', serverSendHour, 1);
 
-        Board expectedBoard = createBoard(114, 334);
+        KICCollection::Board expectedBoard = createBoard(114, 334);
 
         unsigned int schedule0Hours[] = {800, 1200};
         unsigned int schedule1Hours[] = {700, 900, 110, 1300};
-        DaySchedule* schedule0 = createDaySchedule('0', schedule0Hours, 2);
-        DaySchedule* schedule1 = createDaySchedule('2', schedule1Hours, 4);
+        CleaningDiagramCollection::DaySchedule* schedule0 = createDaySchedule('0', schedule0Hours, 2);
+        CleaningDiagramCollection::DaySchedule* schedule1 = createDaySchedule('2', schedule1Hours, 4);
 
-        DaySchedule* schedules[] = {schedule0, schedule1};
-        CleaningDiagram expectedDiagram = createCleaningDiagram(schedules, 2);
+        CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
+        CleaningDiagramCollection::CleaningDiagram expectedDiagram = createCleaningDiagram(schedules, 2);
 
-        KICData* expected_kicData = createKICData(expectedServerSendTime, expectedBoard, expectedDiagram);
+        KICCollection::KICData* expected_kicData = createKICData(expectedServerSendTime, expectedBoard, expectedDiagram);
 
-        KICData *kicData = KICCollection::KICParser(test_kicHeader, test_serverSendTime, test_boardSize, test_cleanDiagram);
+        KICCollection::KICData *kicData = KICCollection::KICParser(test_kicHeader, test_serverSendTime, test_boardSize, test_cleanDiagram);
         bool isPassed = assertKICData(kicData, expected_kicData);
 
         free(expectedServerSendTime);

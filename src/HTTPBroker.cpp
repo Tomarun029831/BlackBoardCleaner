@@ -1,6 +1,8 @@
 #include "../lib/HTTPBroker.hpp"
 #include "../lib/WiFiConnector.hpp"
 #include "../ENV.hpp"
+#include <Arduino.h>
+#include <WString.h>
 #include <HTTPClient.h>
 
 namespace HTTPBroker {

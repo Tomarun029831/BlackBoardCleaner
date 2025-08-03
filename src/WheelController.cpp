@@ -11,6 +11,17 @@ namespace WheelController {
     static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 3000;
     static constexpr int MILL_SEC_TO_FORWARD_FOR_5CM = 1000;
 
+    static void safeStop() {
+        setupPinMode();
+
+        digitalWrite(LEFT_MOTOR_PIN0, LOW);
+        digitalWrite(LEFT_MOTOR_PIN1, LOW);
+        digitalWrite(RIGHT_MOTOR_PIN0, LOW);
+        digitalWrite(RIGHT_MOTOR_PIN1, LOW);
+
+        delay(100); // bridge preservation
+    }
+
     void setupPinMode() {
         pinMode(LEFT_MOTOR_PIN0, OUTPUT);
         pinMode(LEFT_MOTOR_PIN1, OUTPUT);
@@ -102,16 +113,5 @@ namespace WheelController {
         digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
 
         Serial.println(getAllPin());
-    }
-
-    static void safeStop() {
-        setupPinMode();
-
-        digitalWrite(LEFT_MOTOR_PIN0, LOW);
-        digitalWrite(LEFT_MOTOR_PIN1, LOW);
-        digitalWrite(RIGHT_MOTOR_PIN0, LOW);
-        digitalWrite(RIGHT_MOTOR_PIN1, LOW);
-
-        delay(100); // bridge preservation
     }
 }

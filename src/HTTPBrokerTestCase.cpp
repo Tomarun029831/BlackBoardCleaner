@@ -1,4 +1,5 @@
 #include "../test/HTTPBrokerTestCase.hpp"
+#include "../lib/HTTPBroker.hpp"
 #include <WString.h>
 #include <HardwareSerial.h>
 

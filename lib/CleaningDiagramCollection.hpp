@@ -6,7 +6,7 @@
 namespace CleaningDiagramCollection {
     struct DaySchedule {
         char header;
-        unsigned int hours*;
+        unsigned int *hours;
         unsigned int length;
     };
 
