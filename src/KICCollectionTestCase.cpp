@@ -134,12 +134,12 @@ namespace KICCollectionTestCase {
         const char *expected_boardSize = "01140334";
         const char *expected_cleanDiagram = "008001200;20700090011001300;/";
 
-        char *kicHeader = "";
-        char *serverSendTime = "";
-        char *boardSize = "";
-        char *cleanDiagram = "";
+        char kicHeader[KICCollection::KICHEADERLENGTH];
+        char serverSendTime[KICCollection::SERVERSENDTIMELENGTH];
+        char boardSize[KICCollection::BOARDSIZELENGTH];
+        char *cleanDiagram = nullptr;
 
-        KICCollection::KICLexer(testString, kicHeader, serverSendTime, boardSize, cleanDiagram);
+        KICCollection::KICLexer(testString, kicHeader, serverSendTime, boardSize, &cleanDiagram);
 
         bool isPassed = true;
         if(!assertString(kicHeader, expected_kicHeader)) isPassed = false;
@@ -147,9 +147,6 @@ namespace KICCollectionTestCase {
         if(!assertString(boardSize, expected_boardSize)) isPassed = false;
         if(!assertString(cleanDiagram, expected_cleanDiagram)) isPassed = false;
 
-        free(kicHeader);
-        free(serverSendTime);
-        free(boardSize);
         free(cleanDiagram);
 
         return isPassed;

@@ -28,7 +28,7 @@ String stringOne = "<HTML><HEAD><BODY>";
 int firstClosingBracket = stringOne.indexOf('>'); // 5
 */
 
-bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char *cleanDiagram) {
+bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char **cleanDiagram) {
     if (kicString == NULL) return false;
     unsigned int begin = 0, end = 0;
 
@@ -37,7 +37,8 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
     // extract kicHeader
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
     String kicHeaderStr = kicString.substring(begin, end);
-    kicHeader = strdup(kicHeaderStr.c_str());
+    strncpy(kicHeader, kicHeaderStr.c_str(), KICHEADERLENGTH - 1)
+    kicHeader[KICHEADERLENGTH - 1] = '\0';
     begin = end + 1;
     if (strcmp(kicHeader, KICVERSION) != 0) return false;
 
@@ -47,20 +48,22 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
     // extract serverSendTime
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
     String serverSendTimeStr = kicString.substring(begin, end);
-    serverSendTime = strdup(serverSendTimeStr.c_str());
+    strncpy(serverSendTime, serverSendTimeStr.c_str(), SERVERSENDTIMELENGTH - 1);
+    serverSendTime[SERVERSENDTIMELENGTH - 1] = '\0';
     begin = end + 1;
 
     // extract boardSize
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
     String boardSizeStr = kicString.substring(begin, end);
-    boardSize = strdup(boardSizeStr.c_str());
+    strncpy(boardSize, boardSizeStr.c_str(), BOARDSIZELENGTH - 1);
+    boardSize[BOARDSIZELENGTH  - 1] = '\0';
     begin = end + 1;
 
     // extract cleanDiagram
     // end = kicString.indexOf(KICEND, begin);
     // String cleanDiagramStr = kicString.substring(begin, end);
     String cleanDiagramStr = kicString.substring(begin);
-    cleanDiagram = strdup(cleanDiagramStr.c_str());
+    *cleanDiagram = strdup(cleanDiagramStr.c_str());
 
     return true;
 }
@@ -78,8 +81,8 @@ KICCollection::KICData *KICCollection::KICParser(const char *kicHeader, const ch
     if(parsedServerSendTime.length == 0) return nullptr;
 
     // syntaxCheck boardSize
-    if (boardSize == nullptr && strlen(boardSize) != BOARDSIZELENGTH) return nullptr;
-    unsigned int segmentSize = BOARDSIZELENGTH / 2;
+    if (boardSize == nullptr && strlen(boardSize) != BOARDSIZELENGTH - 1) return nullptr;
+    unsigned int segmentSize = (BOARDSIZELENGTH - 1) / 2;
     char *heightSizeStr = strndup(boardSize, segmentSize);
     char *widthSizeStr = strndup(boardSize + segmentSize, segmentSize);
     unsigned int parsedHeightSize = atoi(heightSizeStr); // HACK:
