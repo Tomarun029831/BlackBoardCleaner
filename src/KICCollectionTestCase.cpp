@@ -76,13 +76,13 @@ namespace KICCollectionTestCase {
         return diagram;
     }
 
-    static KICCollection::KICData* createKICData(CleaningDiagramCollection::DaySchedule* serverSendTime, KICCollection::Board board, CleaningDiagramCollection::CleaningDiagram diagram) {
+    static KICCollection::KICData* createKICData(KICCollection::ServerTimestamp* serverTimestamp, KICCollection::Board board, CleaningDiagramCollection::CleaningDiagram diagram) {
         KICCollection::KICData* kicData = (KICCollection::KICData*)calloc(1, sizeof(KICCollection::KICData));
         if (kicData == nullptr) {
             return nullptr;
         }
 
-        kicData->serverSendTime = *serverSendTime;
+        kicData->serverTimestamp = *serverTimestamp;
         kicData->board = board;
         kicData->diagram = diagram;
 
@@ -105,11 +105,26 @@ namespace KICCollectionTestCase {
         return true;
     }
 
+    static bool assertServerTimestamp(const KICCollection::ServerTimestamp *timestamp1, const KICCollection::ServerTimestamp *timestamp2) {
+        if (timestamp1 == nullptr || timestamp2 == nullptr) return false;
+
+        // Compare day field
+        if (timestamp1->day != timestamp2->day) return false;
+
+        // Compare hour_minute field
+        if (timestamp1->hour_minute != timestamp2->hour_minute) return false;
+
+        return true;
+    }
+
     static bool assertKICData(const KICCollection::KICData *data1, const KICCollection::KICData *data2) {
         if (data1 == nullptr || data2 == nullptr) return false;
 
-        // check serverSendTime (DaySchedule*)
-        if (!assertDaySchedule(&(data1->serverSendTime), &(data2->serverSendTime))) return false;
+        // check isNull flag
+        if (data1->isNull != data2->isNull) return false;
+
+        // check serverTimestamp (instead of serverSendTime)
+        if (!assertServerTimestamp(&(data1->serverTimestamp), &(data2->serverTimestamp))) return false;
 
         // check Board
         if (data1->board.height != data2->board.height) return false;
@@ -117,13 +132,11 @@ namespace KICCollectionTestCase {
 
         // check CleaningDiagram
         if (data1->diagram.length != data2->diagram.length) return false;
-
         for (unsigned int i = 0; i < data1->diagram.length; ++i) {
             if (!assertDaySchedule(&data1->diagram.schedules[i], &data2->diagram.schedules[i])) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -159,7 +172,9 @@ namespace KICCollectionTestCase {
         const char *test_cleanDiagram = "008001200;20700090011001300;/";
 
         unsigned int serverSendHour[] = {1437};
-        CleaningDiagramCollection::DaySchedule* expectedServerSendTime = createDaySchedule('0', serverSendHour, 1);
+        KICCollection::ServerTimestamp* expectedServerTimestamp = (KICCollection::ServerTimestamp *)calloc(1, sizeof(KICCollection::ServerTimestamp));
+        expectedServerTimestamp->day = '0';
+        expectedServerTimestamp->hour_minute = 1437;
 
         KICCollection::Board expectedBoard = createBoard(114, 334);
 
@@ -171,16 +186,15 @@ namespace KICCollectionTestCase {
         CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
         CleaningDiagramCollection::CleaningDiagram expectedDiagram = createCleaningDiagram(schedules, 2);
 
-        KICCollection::KICData* expected_kicData = createKICData(expectedServerSendTime, expectedBoard, expectedDiagram);
+        KICCollection::KICData* expected_kicData = createKICData(expectedServerTimestamp, expectedBoard, expectedDiagram);
 
-        KICCollection::KICData *kicData = KICCollection::KICParser(test_kicHeader, test_serverSendTime, test_boardSize, test_cleanDiagram);
-        bool isPassed = assertKICData(kicData, expected_kicData);
+        KICCollection::KICData kicData = KICCollection::KICParser(test_kicHeader, test_serverSendTime, test_boardSize, test_cleanDiagram);
+        bool isPassed = kicData.isNull ? false : assertKICData(&kicData, expected_kicData);
 
-        free(expectedServerSendTime);
+        free(expectedServerTimestamp);
         free(schedule0);
         free(schedule1);
         free(expected_kicData);
-        free(kicData);
 
         return isPassed;
     }

@@ -1,15 +1,13 @@
 #include "../lib/KICCollection.hpp" // CleaningDiagramCollection, WString
 
-KICCollection::KICData *KICCollection::convertToKIC(const String& kicString) {
+KICCollection::KICData KICCollection::convertToKIC(const String& kicString) {
     char kicHeader[KICHEADERLENGTH], serverSendTime[SERVERSENDTIMELENGTH], boardSize[BOARDSIZELENGTH], *cleanDiagram;
     KICCollection::KICLexer(kicString, kicHeader, serverSendTime, boardSize, &cleanDiagram);
-    KICData *kicData = KICCollection::KICParser(kicHeader, serverSendTime, boardSize, cleanDiagram);
-    if (kicData == nullptr) return nullptr;
+    KICData kicData = KICCollection::KICParser(kicHeader, serverSendTime, boardSize, cleanDiagram);
     return kicData;
 }
 
 void KICCollection::freeKICData(KICData *data) {
-    free(data->serverSendTime.hours);
     free(data->diagram.schedules);
     free(data);
 }
@@ -37,7 +35,7 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
     // extract kicHeader
     end = kicString.indexOf(KICSEGMENTCHAR, begin);
     String kicHeaderStr = kicString.substring(begin, end);
-    strncpy(kicHeader, kicHeaderStr.c_str(), KICHEADERLENGTH - 1)
+    strncpy(kicHeader, kicHeaderStr.c_str(), KICHEADERLENGTH - 1);
     kicHeader[KICHEADERLENGTH - 1] = '\0';
     begin = end + 1;
     if (strcmp(kicHeader, KICVERSION) != 0) return false;
@@ -70,37 +68,43 @@ bool KICCollection::KICLexer(const String& kicString, char *kicHeader, char *ser
 
 // KIC:V2;01437;01140334;008001200;20700090011001300;/
 
-KICCollection::KICData *KICCollection::KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram) {
-    if (strcmp(kicHeader, KICVERSION) != 0) return nullptr;
+KICCollection::KICData KICCollection::KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram) {
+    KICData parsedKICData;
+    parsedKICData.isNull = true;
+
+    if (strcmp(kicHeader, KICVERSION) != 0) return parsedKICData;
     namespace CDC = CleaningDiagramCollection;
 
     // syntaxCheck serverSendTime
-    if (serverSendTime == nullptr && strlen(serverSendTime) != SERVERSENDTIMELENGTH) return nullptr;
-    String temp(serverSendTime); // HACK:
-    CDC::DaySchedule parsedServerSendTime = CDC::ScheduleParser(temp);
-    if(parsedServerSendTime.length == 0) return nullptr;
+    if (serverSendTime == nullptr || strlen(serverSendTime) != (SERVERSENDTIMELENGTH - 1)) return parsedKICData;
+    KICCollection::ServerTimestamp parsedServerSendTime = {'\0', 0};
+    parsedServerSendTime.day = serverSendTime[0];
+    parsedServerSendTime.hour_minute = atoi(serverSendTime + 1);
 
     // syntaxCheck boardSize
-    if (boardSize == nullptr && strlen(boardSize) != BOARDSIZELENGTH - 1) return nullptr;
-    unsigned int segmentSize = (BOARDSIZELENGTH - 1) / 2;
-    char *heightSizeStr = strndup(boardSize, segmentSize);
-    char *widthSizeStr = strndup(boardSize + segmentSize, segmentSize);
+    if (boardSize == nullptr || strlen(boardSize) != (BOARDSIZELENGTH - 1)) return parsedKICData;
+    constexpr unsigned int segmentSize = (BOARDSIZELENGTH - 1) / 2; // segmentSize == 4 -> true
+    char heightSizeStr[segmentSize + 1];
+    strncpy(heightSizeStr, boardSize, segmentSize);
+    heightSizeStr[segmentSize] = '\0';
+    char widthSizeStr[segmentSize + 1];
+    strncpy(widthSizeStr, boardSize + segmentSize, segmentSize);
+    widthSizeStr[segmentSize] = '\0';
     unsigned int parsedHeightSize = atoi(heightSizeStr); // HACK:
     unsigned int parsedWidthSize = atoi(widthSizeStr); // HACK:
 
     // syntaxCheck cleanDiagram
-    if (cleanDiagram == nullptr) return nullptr;
+    if (cleanDiagram == nullptr) return parsedKICData;
     CDC::CleaningDiagram parsedDiagram = {nullptr, 0};
-    String temp1(cleanDiagram); // HACK:
-    bool isSuccess = CDC::CleaningDiagramParser(temp1, &parsedDiagram);
-    if(!isSuccess) return nullptr;
+    bool isSuccess = CDC::CleaningDiagramParser(cleanDiagram, parsedDiagram);
+    if(!isSuccess) return parsedKICData;
 
     // set & allocate KICData
-    KICData *parsedKICData = (KICData *)calloc(1, sizeof(KICData));
-    parsedKICData->serverSendTime = parsedServerSendTime;
-    parsedKICData->board.height = parsedHeightSize;
-    parsedKICData->board.width = parsedWidthSize;
-    parsedKICData->diagram = parsedDiagram;
+    parsedKICData.isNull = false;
+    parsedKICData.serverTimestamp = parsedServerSendTime;
+    parsedKICData.board.height = parsedHeightSize;
+    parsedKICData.board.width = parsedWidthSize;
+    parsedKICData.diagram = parsedDiagram;
 
     return parsedKICData;
 }
