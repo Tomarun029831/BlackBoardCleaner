@@ -20,17 +20,23 @@ namespace KICCollection {
         unsigned int width;
     };
 
+    struct ServerTimestamp{
+        char day;
+        unsigned int hour_minute;
+    };
+
     struct KICData{
-        CleaningDiagramCollection::DaySchedule serverSendTime;
+        bool isNull;
+        KICCollection::ServerTimestamp serverTimestamp;
         Board board;
         CleaningDiagramCollection::CleaningDiagram diagram;
     };
 
-    KICData* convertToKIC(const String& kicString);
+    KICData convertToKIC(const String& kicString);
     void freeKICData(KICData *data);
 
     bool KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char **cleanDiagram);
-    KICData* KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram);
+    KICData KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram);
 }
 
 #endif // !_KICCollection_
