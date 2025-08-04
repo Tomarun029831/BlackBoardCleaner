@@ -1,7 +1,7 @@
 #ifndef _WHEELCONTROLLERMANUALTESTCASE_
 #define _WHEELCONTROLLERMANUALTESTCASE_
 
-namespace WheeelControllerManualTestCase {
+namespace WheelControllerManualTestCase {
     void runAllTests();
 }
 

@@ -2,7 +2,7 @@
 #include "../test/WheelControllerManualTestCase.hpp"
 #include <Arduino.h>
 
-namespace WheeelControllerManualTestCase {
+namespace WheelControllerManualTestCase {
 
     static void delayAndStop(unsigned long ms) {
         delay(ms);
