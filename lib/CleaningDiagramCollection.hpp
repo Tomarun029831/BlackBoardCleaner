@@ -16,12 +16,10 @@ namespace CleaningDiagramCollection {
     };
 
     // === Diagram ===
-
-    bool CleaningDiagramParser(String& diagramString, CleaningDiagram *diagram);
-    void freeDiagram(CleaningDiagram *diagram);
+    bool CleaningDiagramParser(const char* diagramString, CleaningDiagram& diagram);
 
     // === Schedule ===
-    DaySchedule ScheduleParser(String& scheduleString);
+    DaySchedule ScheduleParser(const char* scheduleString);
     void freeSchedule(DaySchedule *schedule);
     bool setSchedule(DaySchedule schedule, CleaningDiagram& diagram);
     void deleteSchedule(char header, CleaningDiagram& diagram);
