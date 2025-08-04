@@ -1,8 +1,8 @@
 #include "../lib/KICCollection.hpp" // CleaningDiagramCollection, WString
 
 KICCollection::KICData *KICCollection::convertToKIC(const String& kicString) {
-    char *kicHeader, *serverSendTime, *boardSize, *cleanDiagram;
-    KICCollection::KICLexer(kicString, kicHeader, serverSendTime, boardSize, cleanDiagram);
+    char kicHeader[KICHEADERLENGTH], serverSendTime[SERVERSENDTIMELENGTH], boardSize[BOARDSIZELENGTH], *cleanDiagram;
+    KICCollection::KICLexer(kicString, kicHeader, serverSendTime, boardSize, &cleanDiagram);
     KICData *kicData = KICCollection::KICParser(kicHeader, serverSendTime, boardSize, cleanDiagram);
     if (kicData == nullptr) return nullptr;
     return kicData;
