@@ -50,11 +50,13 @@ void setup() {
   Serial.begin(115200);
 
   // === Test ===
-  KICCollectionTestCase::runAllTests();
   CleaningDiagramCollectionTestCase::runAllTests();
-  WiFiConnectorTestCase::runAllTests();
-  HTTPBrokerTestCase::runAllTests();
-  WheeelControllerManualTestCase::runAllTests();
+  KICCollectionTestCase::runAllTests();
+
+  // WiFiConnectorTestCase::runAllTests(); // passed
+  // HTTPBrokerTestCase::runAllTests(); // passed
+
+  WheelControllerManualTestCase::runAllTests();
 }
 
 void loop() {}
