@@ -6,89 +6,6 @@
 #include <WString.h>
 
 namespace KICCollectionTestCase {
-    static CleaningDiagramCollection::DaySchedule* createDaySchedule(char header, unsigned int* hours, unsigned int length) {
-        if (hours == nullptr && length > 0) {
-            return nullptr;
-        }
-
-        CleaningDiagramCollection::DaySchedule* schedule = (CleaningDiagramCollection::DaySchedule*)calloc(1, sizeof(CleaningDiagramCollection::DaySchedule));
-        if (schedule == nullptr) {
-            return nullptr;
-        }
-
-        schedule->header = header;
-        schedule->length = length;
-
-        if (length > 0) {
-            schedule->hours = (unsigned int*)calloc(length, sizeof(unsigned int));
-            if (schedule->hours == nullptr) {
-                free(schedule);
-                return nullptr;
-            }
-
-            for (unsigned int i = 0; i < length; ++i) {
-                schedule->hours[i] = hours[i];
-            }
-        } else {
-            schedule->hours = nullptr;
-        }
-
-        return schedule;
-    }
-
-    static KICCollection::Board createBoard(unsigned int height, unsigned int width) {
-        KICCollection::Board board;
-        board.height = height;
-        board.width = width;
-        return board;
-    }
-
-    static CleaningDiagramCollection::CleaningDiagram createCleaningDiagram(CleaningDiagramCollection::DaySchedule** schedules, unsigned int scheduleCount) {
-        CleaningDiagramCollection::CleaningDiagram diagram;
-        diagram.length = scheduleCount;
-
-        if (scheduleCount == 0 || schedules == nullptr) {
-            diagram.schedules = nullptr;
-            return diagram;
-        }
-
-        diagram.schedules = (CleaningDiagramCollection::DaySchedule*)calloc(scheduleCount, sizeof(CleaningDiagramCollection::DaySchedule));
-        if (diagram.schedules == nullptr) {
-            diagram.length = 0;
-            return diagram;
-        }
-
-        for (unsigned int i = 0; i < scheduleCount; ++i) {
-            if (schedules[i] != nullptr) {
-                diagram.schedules[i] = *schedules[i];
-                // 時間配列を個別にコピー
-                if (schedules[i]->length > 0) {
-                    diagram.schedules[i].hours = (unsigned int*)calloc(schedules[i]->length, sizeof(unsigned int));
-                    if (diagram.schedules[i].hours != nullptr) {
-                        for (unsigned int j = 0; j < schedules[i]->length; ++j) {
-                            diagram.schedules[i].hours[j] = schedules[i]->hours[j];
-                        }
-                    }
-                }
-            }
-        }
-
-        return diagram;
-    }
-
-    static KICCollection::KICData* createKICData(KICCollection::ServerTimestamp* serverTimestamp, KICCollection::Board board, CleaningDiagramCollection::CleaningDiagram diagram) {
-        KICCollection::KICData* kicData = (KICCollection::KICData*)calloc(1, sizeof(KICCollection::KICData));
-        if (kicData == nullptr) {
-            return nullptr;
-        }
-
-        kicData->serverTimestamp = *serverTimestamp;
-        kicData->board = board;
-        kicData->diagram = diagram;
-
-        return kicData;
-    }
-
     static bool assertString(const char *str1, const char *str2) {
         if (str1 == nullptr || str2 == nullptr) return false;
         return strcmp(str1, str2) == 0;
@@ -96,7 +13,7 @@ namespace KICCollectionTestCase {
 
     static bool assertDaySchedule(const CleaningDiagramCollection::DaySchedule* a, const CleaningDiagramCollection::DaySchedule* b) {
         if (a == nullptr || b == nullptr) return false;
-        if (a->header != b->header) return false;
+        // Remove header comparison as it doesn't exist in the struct
         if (a->length != b->length) return false;
 
         for (unsigned int i = 0; i < a->length; ++i) {
@@ -131,8 +48,7 @@ namespace KICCollectionTestCase {
         if (data1->board.width  != data2->board.width) return false;
 
         // check CleaningDiagram
-        if (data1->diagram.length != data2->diagram.length) return false;
-        for (unsigned int i = 0; i < data1->diagram.length; ++i) {
+        for (unsigned int i = 0; i < AMOUNT_OF_DAY_INWEEK; ++i) {
             if (!assertDaySchedule(&data1->diagram.schedules[i], &data2->diagram.schedules[i])) {
                 return false;
             }
@@ -171,30 +87,44 @@ namespace KICCollectionTestCase {
         const char *test_boardSize = "01140334";
         const char *test_cleanDiagram = "008001200;20700090011001300;/";
 
-        unsigned int serverSendHour[] = {1437};
-        KICCollection::ServerTimestamp* expectedServerTimestamp = (KICCollection::ServerTimestamp *)calloc(1, sizeof(KICCollection::ServerTimestamp));
-        expectedServerTimestamp->day = '0';
-        expectedServerTimestamp->hour_minute = 1437;
+        KICCollection::ServerTimestamp expectedServerTimestamp;
+        expectedServerTimestamp.day = '0';
+        expectedServerTimestamp.hour_minute = 1437;
 
-        KICCollection::Board expectedBoard = createBoard(114, 334);
+        KICCollection::Board expectedBoard;
+        expectedBoard.height = 144;
+        expectedBoard.width = 334;
 
-        unsigned int schedule0Hours[] = {800, 1200};
-        unsigned int schedule1Hours[] = {700, 900, 110, 1300};
-        CleaningDiagramCollection::DaySchedule* schedule0 = createDaySchedule('0', schedule0Hours, 2);
-        CleaningDiagramCollection::DaySchedule* schedule1 = createDaySchedule('2', schedule1Hours, 4);
+        short schedule0Hours[7] = {800, 1200, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule schedule0;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            schedule0.hours[i] = schedule0Hours[i];
+        }
+short schedule1Hours[7] = {700, 900, 110, 1300, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule schedule1;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            schedule1.hours[i] = schedule1Hours[i];
+        }
+        CleaningDiagramCollection::CleaningDiagram expected_diagram;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            expected_diagram.schedules[0].hours[i] = schedule0Hours[i];
+        }
+        expected_diagram.schedules[0].length = 2;
 
-        CleaningDiagramCollection::DaySchedule* schedules[] = {schedule0, schedule1};
-        CleaningDiagramCollection::CleaningDiagram expectedDiagram = createCleaningDiagram(schedules, 2);
-
-        KICCollection::KICData* expected_kicData = createKICData(expectedServerTimestamp, expectedBoard, expectedDiagram);
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            expected_diagram.schedules[2].hours[i] = schedule1Hours[i];
+        }
+        expected_diagram.schedules[2].length = 4;
+        
+        KICCollection::KICData expected_kicData;
+        expected_kicData.isNull = false;
+        expected_kicData.serverTimestamp.day = expectedServerTimestamp.day;
+        expected_kicData.serverTimestamp.hour_minute = expectedServerTimestamp.hour_minute;
+        expected_kicData.board = expectedBoard;
+        expected_kicData.diagram = expected_diagram;
 
         KICCollection::KICData kicData = KICCollection::KICParser(test_kicHeader, test_serverSendTime, test_boardSize, test_cleanDiagram);
-        bool isPassed = kicData.isNull ? false : assertKICData(&kicData, expected_kicData);
-
-        free(expectedServerTimestamp);
-        free(schedule0);
-        free(schedule1);
-        free(expected_kicData);
+        bool isPassed = kicData.isNull ? false : assertKICData(&kicData, &expected_kicData);
 
         return isPassed;
     }

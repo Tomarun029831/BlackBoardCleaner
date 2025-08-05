@@ -5,105 +5,49 @@
 // KIC:V1;01437;01140334;008001200;20700090011001300;/
 
 namespace CleaningDiagramCollectionTestCase {
-    static CleaningDiagramCollection::DaySchedule* createSchedule(char header, unsigned int* hours, unsigned int length) {
-        CleaningDiagramCollection::DaySchedule* schedule = (CleaningDiagramCollection::DaySchedule*)calloc(1, sizeof(CleaningDiagramCollection::DaySchedule));
-        if (schedule == nullptr) {
-            return nullptr;
-        }
-
-        schedule->header = header;
-        schedule->length = length;
-
-        if (length > 0) {
-            if (hours == nullptr) {
-                free(schedule);
-                return nullptr;  // hours がnullなのはエラー
-            }
-
-            schedule->hours = (unsigned int*)calloc(length, sizeof(unsigned int));
-            if (schedule->hours == nullptr) {
-                free(schedule);
-                return nullptr;
-            }
-
-            for (unsigned int i = 0; i < length; ++i) {
-                schedule->hours[i] = hours[i];
-            }
-        } else {
-            schedule->hours = nullptr;  // length 0 の場合はhoursもnullptrでOK
-        }
-
-        return schedule;
-    }
-
-    static CleaningDiagramCollection::CleaningDiagram* createCleaningDiagram(CleaningDiagramCollection::DaySchedule** schedules, unsigned int scheduleCount) {
-        if (schedules == nullptr || scheduleCount == 0) {
-            return nullptr;
-        }
-
-        CleaningDiagramCollection::CleaningDiagram* diagram = (CleaningDiagramCollection::CleaningDiagram*)calloc(1, sizeof(CleaningDiagramCollection::CleaningDiagram));
-        if (diagram == nullptr) {
-            return nullptr;
-        }
-
-        diagram->schedules = (CleaningDiagramCollection::DaySchedule*)calloc(scheduleCount, sizeof(CleaningDiagramCollection::DaySchedule));
-        if (diagram->schedules == nullptr) {
-            free(diagram);
-            return nullptr;
-        }
-
-        diagram->length = scheduleCount;
-
-        for (unsigned int i = 0; i < scheduleCount; ++i) {
-            if (schedules[i] != nullptr) {
-                diagram->schedules[i] = *schedules[i];
-                diagram->schedules[i].hours = (unsigned int*)calloc(schedules[i]->length, sizeof(unsigned int));
-                if (diagram->schedules[i].hours != nullptr) {
-                    for (unsigned int j = 0; j < schedules[i]->length; ++j) {
-                        diagram->schedules[i].hours[j] = schedules[i]->hours[j];
-                    }
-                }
-            }
-        }
-
-        return diagram;
-    }
-
     static bool assertDaySchedule(const CleaningDiagramCollection::DaySchedule* a, const CleaningDiagramCollection::DaySchedule* b) {
         if (a == nullptr || b == nullptr) return false;
-        if (a->header != b->header) return false;
+        // Remove header comparison as it doesn't exist in the struct
         if (a->length != b->length) return false;
-
+        
         for (unsigned int i = 0; i < a->length; ++i) {
             if (a->hours[i] != b->hours[i]) return false;
         }
         return true;
     }
 
-    static bool assertCleaningDiagram(CleaningDiagramCollection::CleaningDiagram* diagram1, CleaningDiagramCollection::CleaningDiagram* diagram2) {
+    static bool assertCleaningDiagram(const CleaningDiagramCollection::CleaningDiagram* diagram1, const CleaningDiagramCollection::CleaningDiagram* diagram2) {
         if (diagram1 == nullptr || diagram2 == nullptr) return false;
-        if (diagram1->length != diagram2->length) return false;
-
-        for (unsigned int i = 0; i < diagram1->length; ++i) {
+        // CleaningDiagram doesn't have length member, so compare all 7 days (AMOUNT_OF_DAY_INWEEK)
+        for (unsigned int i = 0; i < AMOUNT_OF_DAY_INWEEK; ++i) {
             if (!assertDaySchedule(&diagram1->schedules[i], &diagram2->schedules[i])) {
                 return false;
             }
         }
-
         return true;
     }
 
     bool testDiagramParserWithNULL() {
         const char* testDiagramString = "008001200;20700090011001300;";
 
-        unsigned int hours0[2] = {800, 1200};
-        CleaningDiagramCollection::DaySchedule schedule0 = {'0', hours0, 2};
-        unsigned int hours1[4] = {700, 900, 1100, 1300};
-        CleaningDiagramCollection::DaySchedule schedule1 = {'2', hours1, 4};
+        short hours0[10] = {800, 1200, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule schedule0;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            schedule0.hours[i] = hours0[i];
+        }
+        schedule0.length = 2;
+        unsigned int hours1[10] = {700, 900, 1100, 1300, CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule schedule1;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            schedule1.hours[i] = hours1[i];
+        }
+        schedule1.length = 4;
         CleaningDiagramCollection::DaySchedule schedules[2] = {schedule0, schedule1};
-        CleaningDiagramCollection::CleaningDiagram expected_diagram = {schedules, 2};
+        CleaningDiagramCollection::CleaningDiagram expected_diagram;
+        expected_diagram.schedules[0] = schedule0;
+        expected_diagram.schedules[2] = schedule1;
 
-        CleaningDiagramCollection::CleaningDiagram diagram = {nullptr, 0};
+        CleaningDiagramCollection::CleaningDiagram diagram;
         bool isSuccess = CleaningDiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
 
         bool isPassed = assertCleaningDiagram(&expected_diagram, &diagram);
@@ -114,19 +58,36 @@ namespace CleaningDiagramCollectionTestCase {
     bool testDiagramParserWithNONULL() {
         const char* testDiagramString = "008001200;20700090011001300;";
 
-        unsigned int expected_hours0[2] = {800, 1200};
-        CleaningDiagramCollection::DaySchedule expected_schedule0 = {'0', expected_hours0, 2};
-        unsigned int expected_hours1[4] = {700, 900, 1100, 1300};
-        CleaningDiagramCollection::DaySchedule expected_schedule1 = {'2', expected_hours1, 4};
-        CleaningDiagramCollection::DaySchedule expected_schedules[2] = {expected_schedule0, expected_schedule1};
-        CleaningDiagramCollection::CleaningDiagram expected_diagram = {expected_schedules , 2};
+        short expected_hours0[10] = {800, 1200, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR,CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule expected_schedule0;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            expected_schedule0.hours[i] = expected_hours0[i];
+        }
+        expected_schedule0.length = 2;
+        short expected_hours1[10] = {700, 900, 1100, 1300, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule expected_schedule1;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            expected_schedule1.hours[i] = expected_hours1[i];
+        }
+        expected_schedule1.length = 4;
+        CleaningDiagramCollection::CleaningDiagram expected_diagram;
+        expected_diagram.schedules[0] = expected_schedule0;
+        expected_diagram.schedules[2] = expected_schedule1;
 
-        unsigned int hours0[2] = {800, 1600};
-        CleaningDiagramCollection::DaySchedule schedule0 = {'0', hours0, 2};
-        unsigned int hours1[4] = {700, 900, 1200, 1300};
-        CleaningDiagramCollection::DaySchedule schedule1 = {'3', hours1, 4};
-        CleaningDiagramCollection::DaySchedule schedules[2] = {schedule0, schedule1};
-        CleaningDiagramCollection::CleaningDiagram diagram = {schedules, 2};
+        short hours0[10] = {800, 1600, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule schedule0;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            schedule0.hours[i] = hours0[i];
+        }
+        short hours1[10] = {700, 900, 1200, 1300, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR};
+        CleaningDiagramCollection::DaySchedule schedule1;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            schedule1.hours[i] = hours1[i];
+        } 
+        schedule1.length = 4;
+        CleaningDiagramCollection::CleaningDiagram diagram;
+        diagram.schedules[0] = schedule0;
+        diagram.schedules[2] = schedule1;
 
         bool isSuccess = CleaningDiagramCollection::CleaningDiagramParser(testDiagramString, diagram);
         bool isPassed = assertCleaningDiagram(&expected_diagram, &diagram);
@@ -134,110 +95,63 @@ namespace CleaningDiagramCollectionTestCase {
         return isSuccess && isPassed;
     }
 
-    bool testScheduleParser() {
-        const char* testString = "208001700";
+    bool testScheduleParserWithCurrentString() { 
+        const char* testString = "208001700"; 
 
-        unsigned int hours[2] = {800, 1700};
-        CleaningDiagramCollection::DaySchedule expected_schedule = {'2', hours, 2};
-
-        CleaningDiagramCollection::DaySchedule parsedSchedule = CleaningDiagramCollection::ScheduleParser(testString);
-        bool isPassed = assertDaySchedule(&expected_schedule, &parsedSchedule);
-
-        return isPassed;
-    }
-
-    bool testFreeSchedule() {
-        bool isPassed = false;
-        CleaningDiagramCollection::DaySchedule *schedules = (CleaningDiagramCollection::DaySchedule *)calloc(3, sizeof(CleaningDiagramCollection::DaySchedule));
-        schedules[0].header = '0';
-        schedules[0].hours = (unsigned int *)calloc(2, sizeof(CleaningDiagramCollection::DaySchedule));
-        schedules[0].hours[0] = 800;
-        schedules[0].hours[1] = 1200;
-        schedules[0].length = 2;
-
-        schedules[1].header = '1';
-        schedules[1].hours = (unsigned int *)calloc(3, sizeof(CleaningDiagramCollection::DaySchedule));
-        schedules[1].hours[0] = 100;
-        schedules[1].hours[1] = 2300;
-        schedules[1].hours[2] = 1300;
-        schedules[1].length = 3;
- 
-        schedules[2].header = '2';
-        schedules[2].hours = (unsigned int *)calloc(2, sizeof(CleaningDiagramCollection::DaySchedule));
-        schedules[2].hours[0] = 1400;
-        schedules[2].hours[1] = 1555;
-        schedules[2].length = 2;
-
-        unsigned int *checkPtr = schedules[0].hours;
-
-        freeSchedule(schedules);
-
-        try {
-            *checkPtr = 100;
+        unsigned int hours[10] = {800, 1700, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR, CleaningDiagramCollection::INVAILHOUR}; 
+        CleaningDiagramCollection::DaySchedule expected_schedule;
+        for(int i = 0; i < MAX_HOURS_LENGTH; i++){
+            expected_schedule.hours[i] = hours[i];
         }
-        catch (const std::exception&) {
-            isPassed = true;
-            return isPassed;
-        }
+        expected_schedule.length = 2;
+        CleaningDiagramCollection::Weekday expected_weekday = CleaningDiagramCollection::Weekday::Tuesday; 
 
-        return isPassed;
+        CleaningDiagramCollection::Weekday test_weekday; 
+        CleaningDiagramCollection::DaySchedule parsedSchedule; 
+        bool isSuccess = CleaningDiagramCollection::ScheduleParser(testString, test_weekday, parsedSchedule); 
+        bool isPassed = isSuccess && assertDaySchedule(&expected_schedule, &parsedSchedule) && (test_weekday == expected_weekday); 
+
+        return isPassed; 
     }
 
-    bool testSetSchedule() {
-        unsigned int hours0[] = {800, 1200};
-        CleaningDiagramCollection::DaySchedule schedule0 = {'0', hours0, 2};
-        unsigned int hours1[] = {700, 900, 1100, 1300};
-        CleaningDiagramCollection::DaySchedule schedule1 = {'2', hours1, 4};
-        CleaningDiagramCollection::DaySchedule schedules[] = {schedule0, schedule1};
-        CleaningDiagramCollection::CleaningDiagram test_diagram = {schedules, 2};
+    bool testScheduleParserWithWrongString() { 
+        // Test case 1: Invalid header (7 is not a valid weekday)
+        const char* testString0 = "708001700"; 
 
-        unsigned int expectedHours0[] = {800, 1000, 1200, 1300};
-        CleaningDiagramCollection::DaySchedule expectedSchedule0 = {'0', expectedHours0, 4};
-        unsigned int expectedHours1[] = {700, 1100};
-        CleaningDiagramCollection::DaySchedule expectedSchedule1 = {'2', expectedHours1, 2};
-        CleaningDiagramCollection::DaySchedule expectedSchedules[] = {expectedSchedule0, expectedSchedule1};
-        CleaningDiagramCollection::CleaningDiagram expected_diagram = {expectedSchedules, 2};
+        // Test case 2: Header indicates 2 time slots but payload has only 1 time (too short)
+        const char* testString1 = "20800"; 
 
-        unsigned int newHours0[] = {800, 1000, 1200, 1300};
-        CleaningDiagramCollection::DaySchedule newSchedule0 = {'0', newHours0, 4};
-        unsigned int newHours1[] = {700, 1100};
-        CleaningDiagramCollection::DaySchedule newSchedule1 = {'2', newHours1, 2};
+        // Test case 3: Header indicates 2 time slots but payload has 3 times (too long)
+        const char* testString2 = "2080017002000"; 
 
-        setSchedule(newSchedule0, test_diagram);
-        setSchedule(newSchedule1, test_diagram);
+        // Test case 4: Invalid time format (hours > 24)
+        const char* testString3 = "2250017000"; 
 
-        bool isPassed = assertCleaningDiagram(&test_diagram, &expected_diagram);
+        // Test case 5: Empty string
+        const char* testString4 = "";
 
-        return isPassed;
-    }
+        // Test case 6: Only header, no payload
+        const char* testString5 = "2";
 
-    bool testDeleteSchedule() {
-        unsigned int hours0[] = {800, 1200};
-        CleaningDiagramCollection::DaySchedule schedule0 = {'0', hours0, 2};
-        unsigned int hours1[] = {700, 900, 1100, 1300};
-        CleaningDiagramCollection::DaySchedule schedule1 = {'2', hours1, 4};
-        CleaningDiagramCollection::DaySchedule schedules[] = {schedule0, schedule1};
-        CleaningDiagramCollection::CleaningDiagram test_diagram = {schedules, 2};
+        CleaningDiagramCollection::Weekday test_weekday;
+        CleaningDiagramCollection::DaySchedule parsedSchedule;
 
-        unsigned int expected_hours0[] = {700, 900, 1100, 1300};
-        CleaningDiagramCollection::DaySchedule expected_schedule0 = {'2', expected_hours0, 4};
-        CleaningDiagramCollection::DaySchedule expectedSchedules[] = {expected_schedule0};
-        CleaningDiagramCollection::CleaningDiagram expected_diagram = {expectedSchedules, 1};
+        // All these should return false (parsing failure)
+        bool test0 = !CleaningDiagramCollection::ScheduleParser(testString0, test_weekday, parsedSchedule);
+        bool test1 = !CleaningDiagramCollection::ScheduleParser(testString1, test_weekday, parsedSchedule);
+        bool test2 = !CleaningDiagramCollection::ScheduleParser(testString2, test_weekday, parsedSchedule);
+        bool test3 = !CleaningDiagramCollection::ScheduleParser(testString3, test_weekday, parsedSchedule);
+        bool test4 = !CleaningDiagramCollection::ScheduleParser(testString4, test_weekday, parsedSchedule);
+        bool test5 = !CleaningDiagramCollection::ScheduleParser(testString5, test_weekday, parsedSchedule);
 
-        deleteSchedule('0', test_diagram);
-        deleteSchedule('1', test_diagram);
-
-        bool isPassed = assertCleaningDiagram(&test_diagram, &expected_diagram);
-
-        return isPassed;
+        return test0 && test1 && test2 && test3 && test4 && test5;
     }
 
     void runAllTests() {
         Serial.println("DiagramCollectionTestCase");
         Serial.printf(" - testDiagramParserWithNULL %s\n", testDiagramParserWithNULL() ? "passed" : "failed");
         Serial.printf(" - testDiagramParserWithNONULL %s\n", testDiagramParserWithNONULL() ? "passed" : "failed");
-        Serial.printf(" - testScheduleParser %s\n", testScheduleParser() ? "passed" : "failed");
-        Serial.printf(" - testSetSchedule %s\n", testSetSchedule() ? "passed" : "failed");
-        Serial.printf(" - testDeleteSchedule %s\n", testDeleteSchedule() ? "passed" : "failed");
+        Serial.printf(" - testScheduleParserWithCurrentString %s\n", testScheduleParserWithCurrentString() ? "passed" : "failed");
+        Serial.printf(" - testScheduleParserWithWrongString %s\n", testScheduleParserWithWrongString() ? "passed" : "failed");
     }
 }

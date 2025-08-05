@@ -56,7 +56,7 @@ void setup() {
   // WiFiConnectorTestCase::runAllTests(); // passed
   // HTTPBrokerTestCase::runAllTests(); // passed
 
-  WheelControllerManualTestCase::runAllTests();
+  // WheelControllerManualTestCase::runAllTests();
 }
 
 void loop() {}

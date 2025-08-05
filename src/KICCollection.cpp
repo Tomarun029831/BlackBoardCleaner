@@ -95,7 +95,7 @@ KICCollection::KICData KICCollection::KICParser(const char *kicHeader, const cha
 
     // syntaxCheck cleanDiagram
     if (cleanDiagram == nullptr) return parsedKICData;
-    CDC::CleaningDiagram parsedDiagram = {nullptr, 0};
+    CDC::CleaningDiagram parsedDiagram;
     bool isSuccess = CDC::CleaningDiagramParser(cleanDiagram, parsedDiagram);
     if(!isSuccess) return parsedKICData;
 
