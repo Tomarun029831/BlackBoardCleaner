@@ -2,27 +2,37 @@
 #define _CLEANINGDIAGRAMCOLLECTION_
 
 #include <WString.h>
+#define AMOUNT_OF_DAY_INWEEK 7
+#define MAX_HOURS_LENGTH 10
 
 namespace CleaningDiagramCollection {
+    inline constexpr unsigned int DAYSCHEDULELENGTH = 4; // 4
+    inline constexpr short INVAILHOUR = -1;
+
+    enum class Weekday : unsigned char {
+        Sunday = 0,
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday,
+        Saturday
+    };
+
     struct DaySchedule {
-        char header;
-        unsigned int *hours;
-        unsigned int length;
+        short hours[MAX_HOURS_LENGTH];
+        unsigned char length;
     };
 
     struct CleaningDiagram {
-        DaySchedule *schedules;
-        unsigned int length;
+        DaySchedule schedules[AMOUNT_OF_DAY_INWEEK];
     };
 
     // === Diagram ===
     bool CleaningDiagramParser(const char* diagramString, CleaningDiagram& diagram);
 
     // === Schedule ===
-    DaySchedule ScheduleParser(const char* scheduleString);
-    void freeSchedule(DaySchedule *schedule);
-    bool setSchedule(DaySchedule schedule, CleaningDiagram& diagram);
-    void deleteSchedule(char header, CleaningDiagram& diagram);
+    bool ScheduleParser(const char* scheduleString, CleaningDiagramCollection::Weekday& out_day, CleaningDiagramCollection::DaySchedule& out_daySchedule);
 }
 
 #endif // _CLEANINGDIAGRAMCOLLECTION_

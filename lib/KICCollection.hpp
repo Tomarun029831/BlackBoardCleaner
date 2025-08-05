@@ -13,7 +13,6 @@ namespace KICCollection {
     inline constexpr unsigned int KICHEADERLENGTH = 7; // 6 + 1
     inline constexpr unsigned int SERVERSENDTIMELENGTH = 6; // 5 + 1
     inline constexpr unsigned int BOARDSIZELENGTH = 9; // 4(height) + 4(width) + 1
-    inline constexpr unsigned int DAYSCHEDULELENGTH = 4; // 4
 
     struct Board{
         unsigned int height;
