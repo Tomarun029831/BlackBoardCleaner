@@ -14,6 +14,7 @@ namespace WheelControllerManualTestCase {
         Serial.println("=== WheelController Manual Test Start ===");
 
         WheelController::setupPinMode();
+        WheelController::stop();
 
         Serial.println("[Test] Forward 10cm");
         WheelController::forward(10);
