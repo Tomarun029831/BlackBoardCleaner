@@ -5,7 +5,7 @@
 
 namespace KICCollection {
     // KIC Syntax
-    inline constexpr const char KICVERSION[] = "KIC:V2";
+    inline constexpr const char* KICVERSION = "KIC:V3";
     inline constexpr char KICSEGMENTCHAR = ';';
     inline constexpr char KICEND = '/';
 
@@ -25,17 +25,14 @@ namespace KICCollection {
     };
 
     struct KICData{
-        bool isNull;
         KICCollection::ServerTimestamp serverTimestamp;
         Board board;
         CleaningDiagramCollection::CleaningDiagram diagram;
     };
 
     KICData convertToKIC(const String& kicString);
-    void freeKICData(KICData *data);
-
-    bool KICLexer(const String& kicString, char *kicHeader, char *serverSendTime, char *boardSize, char **cleanDiagram);
-    KICData KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram);
+    bool KICLexer(const String& kicString, char *out_kicHeader, char *out_serverSendTime, char *out_boardSize, char **out_cleanDiagram);
+    bool KICParser(const char *kicHeader, const char *serverSendTime, const char *boardSize, const char *cleanDiagram, KICData& out_kicData);
 }
 
 #endif // !_KICCollection_
