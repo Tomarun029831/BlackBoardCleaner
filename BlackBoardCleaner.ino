@@ -14,8 +14,8 @@
 
 KIC:
   KICCollectionTestCase - OK
-  KICCollection - NEED TEST
-  DiagramCollection - NEED TEST
+  KICCollection - OK
+  DiagramCollection - OK
 
 Connection:
   HTTPClientTestCase - OK
@@ -27,12 +27,6 @@ Controller:
   WheelControllerTestCase - OK
   WheelController - NEED MANUAL TEST
   AutoClean(HEIGHT, WIDTH)
-
-Memery:
-  MemeryAllocetor
-
-WCP:
-  WCPCollection
 
 */
 
