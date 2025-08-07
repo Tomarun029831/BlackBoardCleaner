@@ -20,7 +20,7 @@ namespace HTTPBroker {
         http.begin(CONFIG::APIENDPOINT);
 
         int httpCode = http.GET();
-        if (httpCode <= 0) return "";
+        while (httpCode <= 0) httpCode = http.GET();
         String payload = http.getString();
 
         http.end();
