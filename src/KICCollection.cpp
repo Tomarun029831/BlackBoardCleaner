@@ -1,4 +1,5 @@
 #include "../lib/KICCollection.hpp" // CleaningDiagramCollection, WString
+#include "../lib/Timestamp.hpp"
 #include <HardwareSerial.h>
 
 KICCollection::KICData KICCollection::convertToKIC(const String &kicString) {
@@ -143,7 +144,7 @@ bool KICCollection::KICParser(const char *kicHeader, const char *serverSendTime,
     return false;
   }
 
-  KICCollection::ServerTimestamp parsedServerSendTime;
+  Timestamp parsedServerSendTime;
   parsedServerSendTime.day = serverSendTime[0];
   parsedServerSendTime.hour_minute = atoi(serverSendTime + 1);
 

@@ -5,11 +5,10 @@
 
 namespace WheelController {
     void setupPinMode();
-    String getAllPin();
     void forward(unsigned int cm);
     void backward(unsigned int cm);
-    void rightRotate();
-    void leftRotate();
+    void rightRotate(unsigned int dgree); // dgree = 10 (not radian)
+    void leftRotate(unsigned int dgree); // dgree = 10 (not radian)
     void stop();
 }
 

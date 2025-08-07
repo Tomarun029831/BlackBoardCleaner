@@ -1,6 +1,7 @@
 #ifndef _KICCollection_
 #define _KICCollection_
 #include "./CleaningDiagramCollection.hpp"
+#include "./Timestamp.hpp"
 #include <WString.h>
 
 namespace KICCollection {
@@ -15,17 +16,12 @@ namespace KICCollection {
     inline constexpr unsigned int BOARDSIZELENGTH = 9; // 4(height) + 4(width) + 1
 
     struct Board{
-        unsigned int height;
-        unsigned int width;
-    };
-
-    struct ServerTimestamp{
-        char day;
-        unsigned int hour_minute;
+        unsigned int height; // cm
+        unsigned int width; // cm
     };
 
     struct KICData{
-        KICCollection::ServerTimestamp serverTimestamp;
+        Timestamp serverTimestamp;
         Board board;
         CleaningDiagramCollection::CleaningDiagram diagram;
     };

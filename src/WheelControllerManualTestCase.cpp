@@ -25,19 +25,16 @@ namespace WheelControllerManualTestCase {
         delayAndStop(1500);
 
         Serial.println("[Test] Right Rotate");
-        WheelController::rightRotate();
+        WheelController::rightRotate(1);
         delayAndStop(1000);
 
         Serial.println("[Test] Left Rotate");
-        WheelController::leftRotate();
+        WheelController::leftRotate(1);
         delayAndStop(1000);
 
         Serial.println("[Test] Stop (all HIGH)");
         WheelController::stop();
         delay(1000);
-
-        Serial.print("Pin state: ");
-        Serial.println(WheelController::getAllPin());
 
         Serial.println("=== WheelController Manual Test End ===");
     }

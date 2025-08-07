@@ -2,7 +2,7 @@
 #include "../lib/CleaningDiagramCollection.hpp"
 #include <HardwareSerial.h>
 
-// KIC:V1;01437;01140334;008001200;20700090011001300;/
+// KIC:V3;01437;01140334;008001200;20700090011001300;/
 
 namespace CleaningDiagramCollectionTestCase {
     static bool assertDaySchedule(const CleaningDiagramCollection::DaySchedule* a, const CleaningDiagramCollection::DaySchedule* b) {

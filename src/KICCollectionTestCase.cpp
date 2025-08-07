@@ -1,6 +1,7 @@
 #include "../test/KICCollectionTestCase.hpp"
 #include "../lib/CleaningDiagramCollection.hpp"
 #include "../lib/KICCollection.hpp"
+#include "../lib/Timestamp.hpp"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <WString.h>
@@ -28,8 +29,8 @@ static bool assertDaySchedule(const CleaningDiagramCollection::DaySchedule *a,
 }
 
 static bool
-assertServerTimestamp(const KICCollection::ServerTimestamp *timestamp1,
-                      const KICCollection::ServerTimestamp *timestamp2) {
+assertServerTimestamp(const Timestamp *timestamp1,
+                      const Timestamp *timestamp2) {
   if (timestamp1 == nullptr || timestamp2 == nullptr)
     return false;
 
@@ -133,7 +134,7 @@ bool testKICParser() {
   const char *test_cleanDiagram = "008001200;20700090011001300;/";
 
   // 期待値の設定
-  KICCollection::ServerTimestamp expectedServerTimestamp;
+  Timestamp expectedServerTimestamp;
   expectedServerTimestamp.day = '0';
   expectedServerTimestamp.hour_minute = 1437;
 
