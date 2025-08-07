@@ -8,7 +8,8 @@
 // === Arduino  ===
 #include <HardwareSerial.h>
 
-// === core loop ===
+// === my libs ===
+#include "./lib/WheelController.hpp"
 
 /* === TODO ===
 
@@ -42,15 +43,16 @@ WIDTH = 15 cm
 
 void setup() {
   Serial.begin(115200);
+  WheelController::stop();
 
-  // === Test ===
-  CleaningDiagramCollectionTestCase::runAllTests(); // passed
-  KICCollectionTestCase::runAllTests(); // passed
-
-  WiFiConnectorTestCase::runAllTests(); // passed
-  HTTPBrokerTestCase::runAllTests(); // passed
-
-  WheelControllerManualTestCase::runAllTests();
+  // // === Test ===
+  // CleaningDiagramCollectionTestCase::runAllTests(); // passed
+  // KICCollectionTestCase::runAllTests(); // passed
+  //
+  // WiFiConnectorTestCase::runAllTests(); // passed
+  // HTTPBrokerTestCase::runAllTests(); // passed
+  //
+  // WheelControllerManualTestCase::runAllTests(); // passed
 }
 
 void loop() {}
