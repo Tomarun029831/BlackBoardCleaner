@@ -33,6 +33,8 @@ namespace CleaningDiagramCollection {
 
     // === Schedule ===
     bool ScheduleParser(const char* scheduleString, CleaningDiagramCollection::Weekday& out_day, CleaningDiagramCollection::DaySchedule& out_daySchedule);
+    void initDaySchedule(DaySchedule& ds);
+    void initCleaningDiagram(CleaningDiagram& cd);
 }
 
 #endif // _CLEANINGDIAGRAMCOLLECTION_
