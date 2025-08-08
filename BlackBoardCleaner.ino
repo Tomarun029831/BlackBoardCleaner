@@ -61,13 +61,28 @@ static constexpr unsigned int machineHeight = 23;  // cm
 static bool rightMoveToClean = true;
 static bool isPositionedUpper = true;
 
+/*
+ 
+
+  // width : 11cm
+  WheelController::rightRotate(1);
+  delay(180);
+  WheelController::forward(40);
+  delay(180);
+  WheelController::leftRotate(1);
+  delay(180);
+  WheelController::backward(40);
+
+ */
+
 static void AutoClean(const KICCollection::Board boardSize) {
   const unsigned int heightToMove = boardSize.height - machineHeight;
   unsigned int leftWidthToMove = boardSize.width - machineWidth;
-  constexpr unsigned int forwardDistanceToSide = 5;
-  constexpr unsigned int backwardDistanceToSide = 5;
-  constexpr unsigned int forwardDistanceToFixPosition = 5;
-  constexpr unsigned int backwardDistanceToFixPosition = 5;
+  constexpr unsigned int widthToMove = 11; // 11cm
+  constexpr unsigned int forwardDistanceToSide = 40;
+  constexpr unsigned int backwardDistanceToSide = 40;
+  constexpr unsigned int forwardDistanceToFixPosition = 40;
+  constexpr unsigned int backwardDistanceToFixPosition = 60; // 40
 
   if(rightMoveToClean && isPositionedUpper){
     while(true){
@@ -76,23 +91,23 @@ static void AutoClean(const KICCollection::Board boardSize) {
       isPositionedUpper = false;
 
       // slide to side at under position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::rightRotate(1);
       WheelController::backward(backwardDistanceToSide);
       WheelController::leftRotate(1);
       WheelController::forward(forwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // backward to clean
       WheelController::backward(heightToMove);
       isPositionedUpper = true;
 
       // slide to side at upper position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::leftRotate(1);
       WheelController::forward(forwardDistanceToSide);
       WheelController::rightRotate(1);
       WheelController::backward(backwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // forward to clean
       WheelController::forward(heightToMove);
       isPositionedUpper = false;
@@ -105,23 +120,23 @@ static void AutoClean(const KICCollection::Board boardSize) {
       isPositionedUpper = true;
 
       // slide to side at upper position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::rightRotate(1);
       WheelController::forward(forwardDistanceToSide);
       WheelController::leftRotate(1);
       WheelController::backward(backwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // forward to clean
       WheelController::forward(heightToMove);
       isPositionedUpper = false;
 
       // slide to side at under position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::rightRotate(1);
       WheelController::backward(backwardDistanceToSide);
       WheelController::leftRotate(1);
       WheelController::forward(forwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // backward to clean
       WheelController::backward(heightToMove);
       isPositionedUpper = true;
@@ -134,23 +149,23 @@ static void AutoClean(const KICCollection::Board boardSize) {
       isPositionedUpper = false;
 
       // slide to side at under position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::leftRotate(1);
       WheelController::backward(backwardDistanceToSide);
       WheelController::rightRotate(1);
       WheelController::forward(forwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // backward to clean
       WheelController::backward(heightToMove);
       isPositionedUpper = true;
 
       // slide to side at upper position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::rightRotate(1);
       WheelController::forward(forwardDistanceToSide);
       WheelController::leftRotate(1);
       WheelController::backward(backwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // forward tp clean
       WheelController::forward(heightToMove);
       isPositionedUpper = false;
@@ -163,23 +178,23 @@ static void AutoClean(const KICCollection::Board boardSize) {
       isPositionedUpper = true;
 
       // slide to side at upper position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::rightRotate(1);
       WheelController::forward(forwardDistanceToSide);
       WheelController::leftRotate(1);
       WheelController::backward(backwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // backward to clean
       WheelController::forward(heightToMove);
       isPositionedUpper = false;
 
       // slide to side at under position
-      if(leftWidthToMove <= machineWidth) return;
+      if(leftWidthToMove <= widthToMove) return;
       WheelController::rightRotate(1);
       WheelController::backward(backwardDistanceToSide);
       WheelController::leftRotate(1);
       WheelController::forward(forwardDistanceToFixPosition);
-      leftWidthToMove -= machineWidth;
+      leftWidthToMove -= widthToMove;
       // forward tp clean
       WheelController::backward(heightToMove);
       isPositionedUpper = true;
@@ -201,57 +216,61 @@ void setup() {
   // HTTPBroker::setup();
   // String receiveString = HTTPBroker::receiveString();
   // Serial.println(receiveString);
-  String receiveString = "KIC:V3;00000;01140334;008000821;10010090011001300;/";
-  kicData = KICCollection::convertToKIC(receiveString);
-  // set machineInternalTimestamp with serverTimestamp
-  machineInternalTimestamp.day = kicData.serverTimestamp.day;
-  machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
+  // String receiveString = "KIC:V3;00000;01140334;008000821;10010090011001300;/";
+  // kicData = KICCollection::convertToKIC(receiveString);
+  // // set machineInternalTimestamp with serverTimestamp
+  // machineInternalTimestamp.day = kicData.serverTimestamp.day;
+  // machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
 
+  // // width : 11cm
   // WheelController::rightRotate(1);
   // delay(180);
-  // WheelController::forward(14);
+  // WheelController::forward(40);
   // delay(180);
+  // WheelController::leftRotate(1);
+  // delay(180);
+  // WheelController::backward(40);
 
-  // WheelController::rightRotate(1);
-  // delay(180);
-  // WheelController::forward(14);
-  // delay(180);
+  KICCollection::Board test_board;
+  test_board.height = 60;
+  test_board.width = 75;
+  AutoClean(test_board);
 
-  last_mills = millis();
-  timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
+  // last_mills = millis();
+  // timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
 }
 
 static unsigned long minute_counter = 0;
 
 void loop() {
-  unsigned long current_millis = millis();
-  unsigned long elapsed_minutes = current_millis / one_minute_mills;
-
-  WheelController::forward(10);
-  WheelController::backward(10);
-
-  if (elapsed_minutes > minute_counter) {
-    unsigned int minutes_to_add = elapsed_minutes - minute_counter;
-    timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
-    minute_counter = elapsed_minutes;
-
-    // Serial.print("Time updated (");
-    // Serial.print(minutes_to_add);
-    // Serial.print(" min) - HHMM: ");
-    // Serial.println(machineInternalTimestamp.hour_minute);
-    // Serial.print("Day: ");
-    // Serial.println(machineInternalTimestamp.day);
-  }
-
-  char current_day_index = machineInternalTimestamp.day - '0';
-  for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
-    if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
-      kicData.diagram.schedules[current_day_index].hours[len])) {
-      Serial.println("=== AutoClean triggered! ===");
-      // AutoClean(kicData.board);
-      break;  // 同じ時刻で複数回実行を防ぐ
-    }
-  }
-
-  delay(100);
+  // unsigned long current_millis = millis();
+  // unsigned long elapsed_minutes = current_millis / one_minute_mills;
+  //
+  // WheelController::forward(10);
+  // WheelController::backward(10);
+  //
+  // if (elapsed_minutes > minute_counter) {
+  //   unsigned int minutes_to_add = elapsed_minutes - minute_counter;
+  //   timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
+  //   minute_counter = elapsed_minutes;
+  //
+  //   // Serial.print("Time updated (");
+  //   // Serial.print(minutes_to_add);
+  //   // Serial.print(" min) - HHMM: ");
+  //   // Serial.println(machineInternalTimestamp.hour_minute);
+  //   // Serial.print("Day: ");
+  //   // Serial.println(machineInternalTimestamp.day);
+  // }
+  //
+  // char current_day_index = machineInternalTimestamp.day - '0';
+  // for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
+  //   if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
+  //     kicData.diagram.schedules[current_day_index].hours[len])) {
+  //     Serial.println("=== AutoClean triggered! ===");
+  //     // AutoClean(kicData.board);
+  //     break;  // 同じ時刻で複数回実行を防ぐ
+  //   }
+  // }
+  //
+  // delay(100);
 }

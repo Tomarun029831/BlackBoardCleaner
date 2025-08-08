@@ -11,32 +11,52 @@ static constexpr uint8_t LEFT_MOTOR_PIN1 = 19;  // AIN2
 static constexpr uint8_t RIGHT_MOTOR_PIN0 = 22; // BIN1
 static constexpr uint8_t RIGHT_MOTOR_PIN1 = 23; // BIN2
 
+/*
+
+
+1100 -> X
+
+
+*/
+
 // Timing constants
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
+
+
+// forward on terakado white board
 static uint32_t estimateTime_forward(unsigned int distance_cm) {
     if (distance_cm == 0) return 0;
     float coefficient = 139.11;
     float intercept = -81.33;
 
+    // white board
+    // float time_ms = (coefficient * ++distance_cm) + intercept;
+    // 4I board
+    // float time_ms = (coefficient * distance_cm) + intercept;
     float time_ms = (coefficient * ++distance_cm) + intercept;
+    // float time_ms = (coefficient * (distance_cm - 1)) + intercept;
 
     if(time_ms < 0) return 0;
 
     return time_ms;
 }
 
+// backward on terakado white board
 static uint32_t estimateTime_backward(unsigned int distance_cm) {
     if (distance_cm == 0) return 0;
     float coefficient = 206.27;
     float intercept = 160.85;
 
     float time_ms = (coefficient * distance_cm) + intercept;
+    // float time_ms = (coefficient * --distance_cm) + intercept;
+    // float time_ms = (coefficient * (distance_cm + 2)) + intercept;
 
     if(time_ms < 0) return 0;
 
     return time_ms;
 }
+
 
 static void safeStop() {
   setupPinMode();
@@ -75,7 +95,7 @@ void backward(unsigned int cm) {
   digitalWrite(LEFT_MOTOR_PIN1, HIGH);
   digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
 
-  uint32_t delay_ms = estimateTime_forward(cm);
+  uint32_t delay_ms = estimateTime_backward(cm);
   delay(delay_ms);
   machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
