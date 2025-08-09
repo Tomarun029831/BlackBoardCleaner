@@ -1,18 +1,3 @@
-// === my tests ===
-// #include "test/KICCollectionTestCase.hpp"
-#include "test/WiFiConnectorTestCase.hpp"
-#include "test/HTTPBrokerTestCase.hpp"
-// #include "test/CleaningDiagramCollectionTestCase.hpp"
-// #include "test/WheelControllerManualTestCase.hpp"
-
-// CleaningDiagramCollectionTestCase::runAllTests(); // passed
-// KICCollectionTestCase::runAllTests(); // passed
-
-// WiFiConnectorTestCase::runAllTests(); // passed
-// HTTPBrokerTestCase::runAllTests(); // passed
-
-// WheelControllerManualTestCase::runAllTests(); // passed
-
 // === Arduino  ===
 #include <HardwareSerial.h>
 #include <cmath>
@@ -55,25 +40,10 @@ WIDTH = 15 + 6.7 = 21.7 -> 22 cm
 */
 
 static KICCollection::KICData kicData;
-
 static constexpr unsigned int machineWidth = 22;   // cm
 static constexpr unsigned int machineHeight = 23;  // cm
 static bool rightMoveToClean = true;
 static bool isPositionedUpper = true;
-
-/*
- 
-
-  // width : 11cm
-  WheelController::rightRotate(1);
-  delay(180);
-  WheelController::forward(40);
-  delay(180);
-  WheelController::leftRotate(1);
-  delay(180);
-  WheelController::backward(40);
-
- */
 
 static void AutoClean(const KICCollection::Board boardSize) {
   const unsigned int heightToMove = boardSize.height - machineHeight;
@@ -212,65 +182,53 @@ void setup() {
   Serial.begin(115200); // Debug
   WheelController::stop();
 
-  // receive KICData
-  // HTTPBroker::setup();
-  // String receiveString = HTTPBroker::receiveString();
-  // Serial.println(receiveString);
-  // String receiveString = "KIC:V3;00000;01140334;008000821;10010090011001300;/";
-  // kicData = KICCollection::convertToKIC(receiveString);
-  // // set machineInternalTimestamp with serverTimestamp
-  // machineInternalTimestamp.day = kicData.serverTimestamp.day;
-  // machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
+  receive KICData
+  HTTPBroker::setup();
+  String receiveString = HTTPBroker::receiveString();
+  Serial.println(receiveString);
+  // String receiveString = "KIC:V3;00000;00600075;008000821;10010090011001300;/";
+  kicData = KICCollection::convertToKIC(receiveString);
+  // set machineInternalTimestamp with serverTimestamp
+  machineInternalTimestamp.day = kicData.serverTimestamp.day;
+  machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
 
-  // // width : 11cm
-  // WheelController::rightRotate(1);
-  // delay(180);
-  // WheelController::forward(40);
-  // delay(180);
-  // WheelController::leftRotate(1);
-  // delay(180);
-  // WheelController::backward(40);
-
-  KICCollection::Board test_board;
-  test_board.height = 60;
-  test_board.width = 75;
   AutoClean(test_board);
 
-  // last_mills = millis();
-  // timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
+  last_mills = millis();
+  timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
 }
 
 static unsigned long minute_counter = 0;
 
 void loop() {
-  // unsigned long current_millis = millis();
-  // unsigned long elapsed_minutes = current_millis / one_minute_mills;
-  //
-  // WheelController::forward(10);
-  // WheelController::backward(10);
-  //
-  // if (elapsed_minutes > minute_counter) {
-  //   unsigned int minutes_to_add = elapsed_minutes - minute_counter;
-  //   timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
-  //   minute_counter = elapsed_minutes;
-  //
-  //   // Serial.print("Time updated (");
-  //   // Serial.print(minutes_to_add);
-  //   // Serial.print(" min) - HHMM: ");
-  //   // Serial.println(machineInternalTimestamp.hour_minute);
-  //   // Serial.print("Day: ");
-  //   // Serial.println(machineInternalTimestamp.day);
-  // }
-  //
-  // char current_day_index = machineInternalTimestamp.day - '0';
-  // for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
-  //   if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
-  //     kicData.diagram.schedules[current_day_index].hours[len])) {
-  //     Serial.println("=== AutoClean triggered! ===");
-  //     // AutoClean(kicData.board);
-  //     break;  // 同じ時刻で複数回実行を防ぐ
-  //   }
-  // }
-  //
-  // delay(100);
+  unsigned long current_millis = millis();
+  unsigned long elapsed_minutes = current_millis / one_minute_mills;
+
+  WheelController::forward(10);
+  WheelController::backward(10);
+
+  if (elapsed_minutes > minute_counter) {
+    unsigned int minutes_to_add = elapsed_minutes - minute_counter;
+    timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
+    minute_counter = elapsed_minutes;
+
+    // Serial.print("Time updated (");
+    // Serial.print(minutes_to_add);
+    // Serial.print(" min) - HHMM: ");
+    // Serial.println(machineInternalTimestamp.hour_minute);
+    // Serial.print("Day: ");
+    // Serial.println(machineInternalTimestamp.day);
+  }
+
+  char current_day_index = machineInternalTimestamp.day - '0';
+  for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
+    if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
+      kicData.diagram.schedules[current_day_index].hours[len])) {
+      Serial.println("=== AutoClean triggered! ===");
+      // AutoClean(kicData.board);
+      break;  // 同じ時刻で複数回実行を防ぐ
+    }
+  }
+
+  delay(100);
 }
