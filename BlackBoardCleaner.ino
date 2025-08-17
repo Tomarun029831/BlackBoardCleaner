@@ -24,7 +24,6 @@ WIDTH = 15 + 6.7 = 21.7 -> 22 cm
 */
 
 static KICCollection::KICData kicData;
-
 static constexpr unsigned int machineWidth = 22;   // cm
 static constexpr unsigned int machineHeight = 23;  // cm
 static bool rightMoveToClean = true;
@@ -160,13 +159,43 @@ static void AutoClean(const KICCollection::Board boardSize) {
 }
 
 void setup() {
-  Serial.begin(115200);
+  // Serial.begin(115200); // Debug
   WheelController::stop();
 
-  KICCollection::Board test_board;
-  test_board.height = 60;
-  test_board.width = 75;
-  AutoClean(test_board);
+  // receive KICData
+  HTTPBroker::setup();
+  String receiveString = HTTPBroker::receiveString();
+  // Serial.println(receiveString);
+  // String receiveString = "KIC:V3;00000;00600075;008000821;10010090011001300;/";
+  kicData = KICCollection::convertToKIC(receiveString);
+  // set machineInternalTimestamp with serverTimestamp
+  machineInternalTimestamp.day = kicData.serverTimestamp.day;
+  machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
+
+  last_mills = millis();
+  timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
 }
 
-void loop() {}
+static unsigned long minute_counter = 0;
+
+void loop() {
+  unsigned long current_millis = millis();
+  unsigned long elapsed_minutes = current_millis / one_minute_mills;
+
+  if (elapsed_minutes > minute_counter) {
+    unsigned int minutes_to_add = elapsed_minutes - minute_counter;
+    timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
+    minute_counter = elapsed_minutes;
+  }
+
+  char current_day_index = machineInternalTimestamp.day - '0';
+  for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
+    if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
+      kicData.diagram.schedules[current_day_index].hours[len])) {
+      AutoClean(kicData.board);
+      break;
+    }
+  }
+
+  delay(100);
+}
