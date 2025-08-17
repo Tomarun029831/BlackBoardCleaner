@@ -8,22 +8,6 @@
 #include "./lib/HTTPBroker.hpp"
 #include "./lib/Timestamp.hpp"
 
-/* === TODO ===
-KIC:
-  KICCollectionTestCase - OK
-  KICCollection - OK
-  DiagramCollection - OK
-Connection:
-  HTTPClientTestCase - OK
-  WiFiConnectorTestCase - OK
-  HTTPClient - OK
-  WiFiConnector - OK
-Controller:
-  WheelControllerTestCase - OK
-  WheelController - OK
-  AutoClean(HEIGHT, WIDTH)
-*/
-
 /*
 HEIGHT: 5 * 15cm + 10cm = 85 cm
 WIDTH: 8 * 15cm = 120 cm
@@ -68,7 +52,7 @@ static void AutoClean(const KICCollection::Board boardSize) {
       WheelController::forward(forwardDistanceToFixPosition);
       leftWidthToMove -= widthToMove;
       // backward to clean
-      WheelController::backward(heightToMove);
+      WheelController::backward(heightToMove + machineHeight / 2);
       isPositionedUpper = true;
 
       // slide to side at upper position
@@ -173,10 +157,6 @@ static void AutoClean(const KICCollection::Board boardSize) {
   }
   WheelController::stop();
 }
-
-Timestamp machineInternalTimestamp;
-static unsigned long last_mills;
-unsigned long one_minute_mills = 60000; // 60000
 
 void setup() {
   // Serial.begin(115200); // Debug
