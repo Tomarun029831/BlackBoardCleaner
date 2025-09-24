@@ -1,7 +1,7 @@
 #include "../lib/WheelController.hpp"
 #include "../lib/Timestamp.hpp"
 
-extern Timestamp machineInternalTimestamp;
+Timestamp machineInternalTimestamp;
 constexpr unsigned long one_minute_mills = 60000; // 60000
 
 namespace WheelController {
@@ -22,41 +22,42 @@ static constexpr uint8_t RIGHT_MOTOR_PIN1 = 23; // BIN2
 // Timing constants
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
-
-
 // forward on terakado white board
 static uint32_t estimateTime_forward(unsigned int distance_cm) {
-    if (distance_cm == 0) return 0;
-    float coefficient = 139.11;
-    float intercept = -81.33;
+  if (distance_cm == 0)
+    return 0;
+  float coefficient = 139.11;
+  float intercept = -81.33;
 
-    // white board
-    // float time_ms = (coefficient * ++distance_cm) + intercept;
-    // 4I board
-    // float time_ms = (coefficient * distance_cm) + intercept;
-    float time_ms = (coefficient * ++distance_cm) + intercept;
-    // float time_ms = (coefficient * (distance_cm - 1)) + intercept;
+  // white board
+  // float time_ms = (coefficient * ++distance_cm) + intercept;
+  // 4I board
+  // float time_ms = (coefficient * distance_cm) + intercept;
+  float time_ms = (coefficient * ++distance_cm) + intercept;
+  // float time_ms = (coefficient * (distance_cm - 1)) + intercept;
 
-    if(time_ms < 0) return 0;
+  if (time_ms < 0)
+    return 0;
 
-    return time_ms;
+  return time_ms;
 }
 
 // backward on terakado white board
 static uint32_t estimateTime_backward(unsigned int distance_cm) {
-    if (distance_cm == 0) return 0;
-    float coefficient = 206.27;
-    float intercept = 160.85;
+  if (distance_cm == 0)
+    return 0;
+  float coefficient = 206.27;
+  float intercept = 160.85;
 
-    float time_ms = (coefficient * distance_cm) + intercept;
-    // float time_ms = (coefficient * --distance_cm) + intercept;
-    // float time_ms = (coefficient * (distance_cm + 2)) + intercept;
+  float time_ms = (coefficient * distance_cm) + intercept;
+  // float time_ms = (coefficient * --distance_cm) + intercept;
+  // float time_ms = (coefficient * (distance_cm + 2)) + intercept;
 
-    if(time_ms < 0) return 0;
+  if (time_ms < 0)
+    return 0;
 
-    return time_ms;
+  return time_ms;
 }
-
 
 static void safeStop() {
   setupPinMode();
@@ -107,7 +108,6 @@ void rightRotate(unsigned int dgree) {
   // digitalWrite(LEFT_MOTOR_PIN1, LOW);
   // digitalWrite(RIGHT_MOTOR_PIN0, LOW);
   // digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
-
 
   uint32_t delay_ms = MILL_SEC_TO_ROTATE_FOR_90;
   delay(delay_ms);
