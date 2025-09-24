@@ -1,6 +1,5 @@
 // === Arduino  ===
 #include <HardwareSerial.h>
-#include <cmath>
 
 // === my libs ===
 #include "./lib/WheelController.hpp"
