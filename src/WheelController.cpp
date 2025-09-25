@@ -80,7 +80,8 @@ void forward(unsigned int cm) {
 
   safeStop();
   digitalWrite(LEFT_MOTOR_PIN0, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN0, HIGH);
+  // digitalWrite(RIGHT_MOTOR_PIN0, HIGH);
+  digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
 
   uint32_t delay_ms = estimateTime_forward(cm);
   delay(delay_ms);
@@ -94,7 +95,8 @@ void backward(unsigned int cm) {
 
   safeStop();
   digitalWrite(LEFT_MOTOR_PIN1, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
+  // digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
+  digitalWrite(RIGHT_MOTOR_PIN0, HIGH);
 
   uint32_t delay_ms = estimateTime_backward(cm);
   delay(delay_ms);

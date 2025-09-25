@@ -1,5 +1,6 @@
 // === Arduino  ===
 #include <HardwareSerial.h>
+#include <Arduino.h>
 #include <cmath>
 
 // === my libs ===
