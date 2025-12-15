@@ -1,29 +1,26 @@
 #include "../lib/HTTPBroker.hpp"
+#include "../config.hpp"
 #include "../lib/WiFiConnector.hpp"
-#include "../ENV.hpp"
 #include <Arduino.h>
-#include <WString.h>
 #include <HTTPClient.h>
+#include <WString.h>
 
 namespace HTTPBroker {
-    static HTTPClient http;
+static HTTPClient http;
 
-    void setup() {
-        WiFiConnector::setup();
-    }
+void setup() { WiFiConnector::setup(); }
 
-    bool available() {
-        return WiFiConnector::available();
-    }
+bool available() { return WiFiConnector::available(); }
 
-    String receiveString() {
-        http.begin(CONFIG::APIENDPOINT);
+String receiveString() {
+  http.begin(CONFIG::APIENDPOINT);
 
-        int httpCode = http.GET();
-        while (httpCode <= 0) httpCode = http.GET();
-        String payload = http.getString();
+  int httpCode = http.GET();
+  while (httpCode <= 0)
+    httpCode = http.GET();
+  String payload = http.getString();
 
-        http.end();
-        return payload;
-    }
+  http.end();
+  return payload;
 }
+} // namespace HTTPBroker

@@ -1,4 +1,6 @@
 ENV.*
+config.*
+CONFIG.*
 
 # will have compiled files and executables
 debug/
