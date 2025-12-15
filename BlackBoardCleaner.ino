@@ -158,6 +158,9 @@ static void AutoClean(const KICCollection::Board boardSize) {
   WheelController::stop();
 }
 
+Timestamp machineInternalTimestamp;
+constexpr short one_minute_mills = 10000;
+
 void setup() {
   // Serial.begin(115200); // Debug
   WheelController::stop();
@@ -172,7 +175,7 @@ void setup() {
   machineInternalTimestamp.day = kicData.serverTimestamp.day;
   machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
 
-  last_mills = millis();
+  unsigned long last_mills = millis();
   timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
 }
 
