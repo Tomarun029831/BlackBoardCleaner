@@ -5,6 +5,7 @@
 // === my libs ===
 #include "./lib/WheelController.hpp"
 #include "./lib/KICCollection.hpp"
+// #include "./lib/sj.h"
 #include "./lib/HTTPBroker.hpp"
 #include "./lib/Timestamp.hpp"
 
@@ -165,11 +166,9 @@ void setup() {
   // Serial.begin(115200); // Debug
   WheelController::stop();
 
-  // receive KICData
   HTTPBroker::setup();
+  // receive KICData
   String receiveString = HTTPBroker::receiveString();
-  // Serial.println(receiveString);
-  // String receiveString = "KIC:V3;00000;00600075;008000821;10010090011001300;/";
   kicData = KICCollection::convertToKIC(receiveString);
   // set machineInternalTimestamp with serverTimestamp
   machineInternalTimestamp.day = kicData.serverTimestamp.day;
@@ -192,6 +191,14 @@ void loop() {
   }
 
   char current_day_index = machineInternalTimestamp.day - '0';
+  if (current_day_index - '6' == 0) {
+    // receive KICData
+    String receiveString = HTTPBroker::receiveString();
+    kicData = KICCollection::convertToKIC(receiveString);
+    // set machineInternalTimestamp with serverTimestamp
+    machineInternalTimestamp.day = kicData.serverTimestamp.day;
+    machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
+  }
   for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
     if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
       kicData.diagram.schedules[current_day_index].hours[len])) {
