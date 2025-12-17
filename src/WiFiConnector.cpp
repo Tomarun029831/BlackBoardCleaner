@@ -15,8 +15,9 @@ void setup() {
     unsigned long currentMillis = millis();
 
     if (currentMillis - lastRetryTime >= RETRY_INTERVAL_MS) {
-      WiFi.disconnect();
-      WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
+      // WiFi.disconnect();
+      // WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
+      WiFi.reconnect();
       lastRetryTime = currentMillis;
     }
 
