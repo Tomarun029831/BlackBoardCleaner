@@ -159,36 +159,54 @@ static void AutoClean(const KICCollection::Board boardSize) {
   WheelController::stop();
 }
 
+void delayWithoutCpuStop(unsigned int ms, Timestamp &ts);
+
+void delayWithoutCpuStop(unsigned int ms, Timestamp &ts){
+  unsigned long start_mills = millis();
+  while(millis() - start_mills < ms) yield();
+  timestamp_add_milliseconds(ts, ms);
+}
+
 Timestamp machineInternalTimestamp;
-constexpr short one_minute_mills = 10000;
+constexpr unsigned long one_minute_mills = 60000;
 
 void setup() {
-  // Serial.begin(115200); // Debug
+  Serial.begin(115200);
   WheelController::stop();
 
-  HTTPBroker::setup();
-  // receive KICData
-  String receiveString = HTTPBroker::receiveString();
+  KICCollection::Board test_board;
+  test_board.height = 45;
+  test_board.width = 75;
+  // AutoClean(test_board);
+
+  WheelController::stop();
+  // WheelController::forward(62);
+  
+  // HTTPBroker::setup();
+  // // receive KICData
+  // String receiveString = HTTPBroker::receiveString();
+  String receiveString = "KIC:V3;31734;00600075;008000821;31735;10010090011001300;/";
   kicData = KICCollection::convertToKIC(receiveString);
-  // set machineInternalTimestamp with serverTimestamp
+  // // set machineInternalTimestamp with serverTimestamp
   machineInternalTimestamp.day = kicData.serverTimestamp.day;
   machineInternalTimestamp.hour_minute = kicData.serverTimestamp.hour_minute;
+  timestamp_print(machineInternalTimestamp); // DEBUG:
 
-  unsigned long last_mills = millis();
-  timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
+  // unsigned long last_mills = millis();
+  // timestamp_add_minutes(machineInternalTimestamp, last_mills / one_minute_mills);
 }
 
 static unsigned long minute_counter = 0;
 
 void loop() {
-  unsigned long current_millis = millis();
-  unsigned long elapsed_minutes = current_millis / one_minute_mills;
-
-  if (elapsed_minutes > minute_counter) {
-    unsigned int minutes_to_add = elapsed_minutes - minute_counter;
-    timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
-    minute_counter = elapsed_minutes;
-  }
+  // unsigned long current_millis = millis();
+  // unsigned long elapsed_minutes = current_millis / one_minute_mills;
+  //
+  // if (elapsed_minutes > minute_counter) {
+  //   unsigned int minutes_to_add = elapsed_minutes - minute_counter;
+  //   timestamp_add_minutes(machineInternalTimestamp, minutes_to_add);
+  //   minute_counter = elapsed_minutes;
+  // }
 
   char current_day_index = machineInternalTimestamp.day - '0';
   if (current_day_index - '6' == 0) {
@@ -207,5 +225,6 @@ void loop() {
     }
   }
 
-  delay(100);
+  delayWithoutCpuStop(100, machineInternalTimestamp);
+  timestamp_print(machineInternalTimestamp); // DEBUG:
 }

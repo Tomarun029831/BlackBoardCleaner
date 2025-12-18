@@ -3,6 +3,7 @@
 #include <driver/gpio.h>
 
 extern Timestamp machineInternalTimestamp;
+extern void delayWithoutCpuStop(unsigned int ms, Timestamp &ts);
 constexpr unsigned long one_minute_mills = 60000; // 60000
 
 namespace WheelController {
@@ -87,8 +88,9 @@ void forward(unsigned int cm) {
   gpio_set_level((gpio_num_t)RIGHT_MOTOR_PIN0, 1);
 
   uint32_t delay_ms = estimateTime_forward(cm);
-  delay(delay_ms);
-  machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
+  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
+  timestamp_print(machineInternalTimestamp); // DEBUG:
+  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
 }
 
@@ -101,8 +103,9 @@ void backward(unsigned int cm) {
   digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
 
   uint32_t delay_ms = estimateTime_backward(cm);
-  delay(delay_ms);
-  machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
+  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
+  timestamp_print(machineInternalTimestamp); // DEBUG:
+  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
 }
 
@@ -114,8 +117,9 @@ void rightRotate(unsigned int dgree) {
   // digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
 
   uint32_t delay_ms = MILL_SEC_TO_ROTATE_FOR_90;
-  delay(delay_ms);
-  machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
+  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
+  timestamp_print(machineInternalTimestamp); // DEBUG:
+  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
 }
 
@@ -127,8 +131,9 @@ void leftRotate(unsigned int dgree) {
   // digitalWrite(RIGHT_MOTOR_PIN1, LOW);
 
   uint32_t delay_ms = MILL_SEC_TO_ROTATE_FOR_90;
-  delay(delay_ms);
-  machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
+  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
+  timestamp_print(machineInternalTimestamp); // DEBUG:
+  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
 }
 
