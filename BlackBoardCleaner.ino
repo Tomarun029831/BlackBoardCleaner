@@ -188,12 +188,12 @@ constexpr unsigned long one_minute_mills = 60000;
 
 void setup() {
   Serial.begin(115200);
+  WheelController::setupPinMode();
   WheelController::stop();
-
-  // HTTPBroker::setup();
   // receive KICData
-  // String receiveString = HTTPBroker::receiveString();
-  String receiveString = "KIC:V3;31734;00500050;317351736;/";
+  HTTPBroker::setup();
+  String receiveString = HTTPBroker::receiveString();
+  // String receiveString = "KIC:V3;31734;00500050;317351736;/";
   Serial.println(receiveString);
   kicData = KICCollection::convertToKIC(receiveString);
   if (kicData.board.height <= 0 && kicData.board.width <= 0) ESP.restart();
@@ -219,14 +219,11 @@ void loop() {
   if(millis() - mills_on_called >= one_minute_mills) {
     mills_on_called = millis();
     isOnceCleaned = false;
-    Serial.println("isOnceCleaned = false");
   }
   for (unsigned int len = 0; len < kicData.diagram.schedules[current_day_index].length; len++) {
     if (timestamp_compare_hour_minute(machineInternalTimestamp.hour_minute,
       kicData.diagram.schedules[current_day_index].hours[len]) && !isOnceCleaned) {
-      Serial.println("AutoClean");
       isOnceCleaned = true;
-      Serial.println("isOnceCleaned = true");
       mills_on_called = millis();
       AutoClean(kicData.board);
       break;
