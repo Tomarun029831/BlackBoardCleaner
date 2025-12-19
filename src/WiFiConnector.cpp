@@ -5,7 +5,7 @@
 
 namespace WiFiConnector {
 // 1000 ms = 1 s
-constexpr unsigned long RETRY_INTERVAL_MS = 25000;
+constexpr unsigned long RETRY_INTERVAL_MS = 8000;
 
 void scanAPs() {
   Serial.println("Scanning for WiFi networks...");
@@ -46,8 +46,9 @@ void setup() {
 
     if (currentMillis - lastRetryTime >= RETRY_INTERVAL_MS) {
       Serial.println("-- retry to connect --");
-      WiFi.disconnect();
+      WiFi.disconnect(true);
       WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
+      // WiFi.reconnect();
       lastRetryTime = currentMillis;
     }
     delay(500);
