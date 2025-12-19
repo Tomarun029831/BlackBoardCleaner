@@ -32,7 +32,7 @@ void scanAPs() {
 }
 
 void setup() {
-  scanAPs();
+  // scanAPs();
   unsigned long lastRetryTime = 0;
   WiFi.mode(WIFI_STA);
   Serial.println(CONFIG::SSID);
