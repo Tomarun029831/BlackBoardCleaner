@@ -4,93 +4,89 @@
 
 extern Timestamp machineInternalTimestamp;
 extern void delayWithoutCpuStop(unsigned int ms, Timestamp &ts);
-constexpr unsigned long one_minute_mills = 60000; // 60000
+
+constexpr unsigned long one_minute_mills = 60000;
 
 namespace WheelController {
+
+// =====================
 // Motor pin definitions
-static constexpr uint8_t LEFT_MOTOR_PIN0 = 18;  // AIN1
-static constexpr uint8_t LEFT_MOTOR_PIN1 = 19;  // AIN2
-static constexpr uint8_t RIGHT_MOTOR_PIN0 = 23; // BIN1
-static constexpr uint8_t RIGHT_MOTOR_PIN1 = 22; // BIN2
+// =====================
+static constexpr gpio_num_t LEFT_MOTOR_PIN0 = (gpio_num_t)18;
+static constexpr gpio_num_t LEFT_MOTOR_PIN1 = (gpio_num_t)19;
+static constexpr gpio_num_t RIGHT_MOTOR_PIN0 = (gpio_num_t)23;
+static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)22;
 
-/*
-
-
-1100 -> X
-
-
-*/
-
+// =====================
 // Timing constants
+// =====================
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
-// forward on terakado white board
+// =====================
+// GPIO setup
+// =====================
+void setupPinMode() {
+  gpio_config_t io_conf{};
+  io_conf.intr_type = GPIO_INTR_DISABLE;
+  io_conf.mode = GPIO_MODE_OUTPUT;
+  io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+  io_conf.pin_bit_mask = (1ULL << LEFT_MOTOR_PIN0) | (1ULL << LEFT_MOTOR_PIN1) |
+                         (1ULL << RIGHT_MOTOR_PIN0) |
+                         (1ULL << RIGHT_MOTOR_PIN1);
+
+  gpio_config(&io_conf);
+}
+
+// =====================
+// Time estimation
+// =====================
 static uint32_t estimateTime_forward(unsigned int distance_cm) {
   if (distance_cm == 0)
     return 0;
-  float coefficient = 139.11;
-  float intercept = -81.33;
 
-  // white board
-  // float time_ms = (coefficient * ++distance_cm) + intercept;
-  // 4I board
-  // float time_ms = (coefficient * distance_cm) + intercept;
+  float coefficient = 139.11f;
+  float intercept = -81.33f;
+
   float time_ms = (coefficient * ++distance_cm) + intercept;
-  // float time_ms = (coefficient * (distance_cm - 1)) + intercept;
-
-  if (time_ms < 0)
-    return 0;
-
-  return time_ms;
+  return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
 }
 
-// backward on terakado white board
 static uint32_t estimateTime_backward(unsigned int distance_cm) {
   if (distance_cm == 0)
     return 0;
-  float coefficient = 206.27;
-  float intercept = 160.85;
+
+  float coefficient = 206.27f;
+  float intercept = 160.85f;
 
   float time_ms = (coefficient * distance_cm) + intercept;
-  // float time_ms = (coefficient * --distance_cm) + intercept;
-  // float time_ms = (coefficient * (distance_cm + 2)) + intercept;
-
-  if (time_ms < 0)
-    return 0;
-
-  return time_ms;
+  return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
 }
 
+// =====================
+// Motor control helpers
+// =====================
 static void safeStop() {
-  setupPinMode();
-  digitalWrite(LEFT_MOTOR_PIN0, LOW);
-  digitalWrite(LEFT_MOTOR_PIN1, LOW);
-  digitalWrite(RIGHT_MOTOR_PIN0, LOW);
-  digitalWrite(RIGHT_MOTOR_PIN1, LOW);
+  gpio_set_level(LEFT_MOTOR_PIN0, 0);
+  gpio_set_level(LEFT_MOTOR_PIN1, 0);
+  gpio_set_level(RIGHT_MOTOR_PIN0, 0);
+  gpio_set_level(RIGHT_MOTOR_PIN1, 0);
 }
 
-void setupPinMode() {
-  pinMode(LEFT_MOTOR_PIN0, OUTPUT);
-  pinMode(LEFT_MOTOR_PIN1, OUTPUT);
-  pinMode(RIGHT_MOTOR_PIN0, OUTPUT);
-  pinMode(RIGHT_MOTOR_PIN1, OUTPUT);
-}
-
+// =====================
+// Motion APIs
+// =====================
 void forward(unsigned int cm) {
   if (cm == 0)
     return;
 
   safeStop();
-  // digitalWrite(LEFT_MOTOR_PIN0, HIGH);
-  // digitalWrite(RIGHT_MOTOR_PIN0, HIGH);
 
-  gpio_set_level((gpio_num_t)LEFT_MOTOR_PIN0, 1);
-  gpio_set_level((gpio_num_t)RIGHT_MOTOR_PIN0, 1);
+  gpio_set_level(LEFT_MOTOR_PIN0, 1);
+  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
 
   uint32_t delay_ms = estimateTime_forward(cm);
   delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
-  timestamp_print(machineInternalTimestamp); // DEBUG:
-  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
 }
 
@@ -99,49 +95,43 @@ void backward(unsigned int cm) {
     return;
 
   safeStop();
-  digitalWrite(LEFT_MOTOR_PIN1, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
+
+  gpio_set_level(LEFT_MOTOR_PIN1, 1);
+  gpio_set_level(RIGHT_MOTOR_PIN1, 1);
 
   uint32_t delay_ms = estimateTime_backward(cm);
   delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
-  timestamp_print(machineInternalTimestamp); // DEBUG:
-  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
   stop();
 }
 
-void rightRotate(unsigned int dgree) {
-  safeStop();
-  digitalWrite(LEFT_MOTOR_PIN0, HIGH);
-  // digitalWrite(LEFT_MOTOR_PIN1, LOW);
-  // digitalWrite(RIGHT_MOTOR_PIN0, LOW);
-  // digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
+void rightRotate(unsigned int degree) {
+  (void)degree; // 現状は 90 度固定
 
-  uint32_t delay_ms = MILL_SEC_TO_ROTATE_FOR_90;
-  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
-  timestamp_print(machineInternalTimestamp); // DEBUG:
-  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
+  safeStop();
+  gpio_set_level(LEFT_MOTOR_PIN0, 1);
+
+  delayWithoutCpuStop(MILL_SEC_TO_ROTATE_FOR_90, machineInternalTimestamp);
   stop();
 }
 
-void leftRotate(unsigned int dgree) {
-  safeStop();
-  // digitalWrite(LEFT_MOTOR_PIN0, LOW);
-  // digitalWrite(LEFT_MOTOR_PIN1, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN0, HIGH);
-  // digitalWrite(RIGHT_MOTOR_PIN1, LOW);
+void leftRotate(unsigned int degree) {
+  (void)degree; // 現状は 90 度固定
 
-  uint32_t delay_ms = MILL_SEC_TO_ROTATE_FOR_90;
-  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
-  timestamp_print(machineInternalTimestamp); // DEBUG:
-  // machineInternalTimestamp.hour_minute += delay_ms / one_minute_mills;
+  safeStop();
+  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
+
+  delayWithoutCpuStop(MILL_SEC_TO_ROTATE_FOR_90, machineInternalTimestamp);
   stop();
 }
 
 void stop() {
   safeStop();
-  digitalWrite(LEFT_MOTOR_PIN0, HIGH);
-  digitalWrite(LEFT_MOTOR_PIN1, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN0, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
+
+  // モータドライバ仕様に合わせた停止（ブレーキ）
+  gpio_set_level(LEFT_MOTOR_PIN0, 1);
+  gpio_set_level(LEFT_MOTOR_PIN1, 1);
+  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
+  gpio_set_level(RIGHT_MOTOR_PIN1, 1);
 }
+
 } // namespace WheelController
