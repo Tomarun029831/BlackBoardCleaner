@@ -8,6 +8,7 @@ KICCollection::KICData KICCollection::convertToKIC(const String &kicString) {
   bool isCorrenctLexed = KICCollection::KICLexer(
       kicString, kicHeader, serverSendTime, boardSize, &cleanDiagram);
   KICData parsedKICData;
+  // parsedKICData.board = {0, 0};
   bool isCorrectParsed = KICCollection::KICParser(
       kicHeader, serverSendTime, boardSize, cleanDiagram, parsedKICData);
 
