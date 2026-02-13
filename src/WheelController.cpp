@@ -12,10 +12,10 @@ namespace WheelController {
 // =====================
 // Motor pin definitions
 // =====================
-static constexpr gpio_num_t LEFT_MOTOR_PIN0 = (gpio_num_t)18;
-static constexpr gpio_num_t LEFT_MOTOR_PIN1 = (gpio_num_t)19;
-static constexpr gpio_num_t RIGHT_MOTOR_PIN0 = (gpio_num_t)23;
-static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)22;
+static constexpr gpio_num_t LEFT_MOTOR_PIN0 = (gpio_num_t)32;
+static constexpr gpio_num_t LEFT_MOTOR_PIN1 = (gpio_num_t)33;
+static constexpr gpio_num_t RIGHT_MOTOR_PIN0 = (gpio_num_t)25;
+static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)26;
 
 // =====================
 // Timing constants
