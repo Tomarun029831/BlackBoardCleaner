@@ -22,7 +22,7 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 static constexpr ledc_mode_t LEDC_MODE = LEDC_LOW_SPEED_MODE;
 static constexpr ledc_timer_t LEDC_TIMER = LEDC_TIMER_0;
 static constexpr ledc_timer_bit_t LEDC_RESOLUTION = LEDC_TIMER_10_BIT; // 0-1023
-static constexpr uint32_t LEDC_FREQ = 5000;
+static constexpr uint32_t LEDC_FREQ = 30;
 
 // 画像の通り、交互に動かすための設定
 // DRIVE_DUTY を 512(50%) 未満にすることで、物理的な重なりをゼロにします
