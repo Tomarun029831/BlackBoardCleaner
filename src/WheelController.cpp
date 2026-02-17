@@ -1,7 +1,6 @@
 #include "../lib/WheelController.hpp"
 #include "../lib/Timestamp.hpp"
 #include <driver/gpio.h>
-#include <driver/ledc.h>
 
 extern Timestamp machineInternalTimestamp;
 extern void delayWithoutCpuStop(unsigned int ms, Timestamp &ts);
@@ -17,23 +16,17 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN0 = (gpio_num_t)26;
 static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 
 // =====================
-// PWM (LEDC) Constants
+// Timing constants
 // =====================
-static constexpr ledc_mode_t LEDC_MODE = LEDC_LOW_SPEED_MODE;
-static constexpr ledc_timer_t LEDC_TIMER = LEDC_TIMER_0;
-static constexpr ledc_timer_bit_t LEDC_RESOLUTION = LEDC_TIMER_10_BIT; // 0-1023
-static constexpr uint32_t LEDC_FREQ = 30;
-
-// 画像の通り、交互に動かすための設定
-// DRIVE_DUTY を 512(50%) 未満にすることで、物理的な重なりをゼロにします
-static constexpr uint32_t DRIVE_DUTY = 480;
-static constexpr uint32_t HPOINT_OFFSET = 512; // 右モーターの開始点を半分ずらす
-static constexpr uint32_t STOP_DUTY = 1023;    // ブレーキ（全ピンHigh）
+// 1サイクルあたりの時間(ms)。1sで30回切り替える場合は約33msですが、
+// ここでは以前の安定値 20ms (50Hz相当) を基準にしています。
+static constexpr int MUX_STEP_MS = 33;
+static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
 // =====================
-// Time estimation
+// Time estimation (エラー回避のため、呼び出し元より前に配置)
 // =====================
-uint32_t estimateTime_forward(unsigned int distance_cm) {
+static uint32_t estimateTime_forward(unsigned int distance_cm) {
   if (distance_cm == 0)
     return 0;
   float coefficient = 139.11f;
@@ -42,7 +35,7 @@ uint32_t estimateTime_forward(unsigned int distance_cm) {
   return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
 }
 
-uint32_t estimateTime_backward(unsigned int distance_cm) {
+static uint32_t estimateTime_backward(unsigned int distance_cm) {
   if (distance_cm == 0)
     return 0;
   float coefficient = 206.27f;
@@ -52,105 +45,92 @@ uint32_t estimateTime_backward(unsigned int distance_cm) {
 }
 
 // =====================
-// PWM Control Helpers
+// Motor control helpers
 // =====================
-static void setDuty(ledc_channel_t ch, uint32_t duty) {
-  ledc_set_duty(LEDC_MODE, ch, duty);
-  ledc_update_duty(LEDC_MODE, ch);
+void stop() {
+  // 全ピンHighでブレーキ（ドライバの仕様に準拠）
+  gpio_set_level(LEFT_MOTOR_PIN0, 1);
+  gpio_set_level(LEFT_MOTOR_PIN1, 1);
+  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
+  gpio_set_level(RIGHT_MOTOR_PIN1, 1);
 }
 
-static void allLow() {
-  for (int i = 0; i < 4; i++) {
-    setDuty((ledc_channel_t)i, 0);
+static void safeAllLow() {
+  gpio_set_level(LEFT_MOTOR_PIN0, 0);
+  gpio_set_level(LEFT_MOTOR_PIN1, 0);
+  gpio_set_level(RIGHT_MOTOR_PIN0, 0);
+  gpio_set_level(RIGHT_MOTOR_PIN1, 0);
+}
+
+// 擬似的に両輪を動かすコアロジック (Time Division)
+static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
+  uint32_t elapsed = 0;
+  gpio_num_t left_pin = forward_direction ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
+  gpio_num_t right_pin =
+      forward_direction ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
+
+  while (elapsed < total_duration_ms) {
+    // --- 左モーターのみ駆動 ---
+    safeAllLow();
+    gpio_set_level(left_pin, 1);
+    delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
+
+    // --- 右モーターのみ駆動 ---
+    safeAllLow();
+    gpio_set_level(right_pin, 1);
+    delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
+
+    elapsed += MUX_STEP_MS;
   }
 }
 
 // =====================
-// GPIO & PWM Setup
+// GPIO setup
 // =====================
 void setupPinMode() {
-  // 1. タイマー設定
-  ledc_timer_config_t timer_conf = {};
-  timer_conf.speed_mode = LEDC_MODE;
-  timer_conf.duty_resolution = LEDC_RESOLUTION;
-  timer_conf.timer_num = LEDC_TIMER;
-  timer_conf.freq_hz = LEDC_FREQ;
-  timer_conf.clk_cfg = LEDC_AUTO_CLK;
-  ledc_timer_config(&timer_conf);
-
-  // 2. 各ピンの設定
-  struct PinCfg {
-    gpio_num_t pin;
-    ledc_channel_t ch;
-    uint32_t hpoint;
-  };
-  PinCfg configs[] = {
-      {LEFT_MOTOR_PIN0, LEDC_CHANNEL_0, 0},              // 左0
-      {LEFT_MOTOR_PIN1, LEDC_CHANNEL_1, 0},              // 左1
-      {RIGHT_MOTOR_PIN0, LEDC_CHANNEL_2, HPOINT_OFFSET}, // 右0 (位相ずらし)
-      {RIGHT_MOTOR_PIN1, LEDC_CHANNEL_3, HPOINT_OFFSET}  // 右1 (位相ずらし)
-  };
-
-  for (const auto &c : configs) {
-    ledc_channel_config_t ch_conf = {};
-    ch_conf.gpio_num = c.pin;
-    ch_conf.speed_mode = LEDC_MODE;
-    ch_conf.channel = c.ch;
-    ch_conf.intr_type = LEDC_INTR_DISABLE;
-    ch_conf.timer_sel = LEDC_TIMER;
-    ch_conf.duty = 0;
-    ch_conf.hpoint = c.hpoint;
-    ledc_channel_config(&ch_conf);
-  }
+  gpio_config_t io_conf{};
+  io_conf.intr_type = GPIO_INTR_DISABLE;
+  io_conf.mode = GPIO_MODE_OUTPUT;
+  io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+  io_conf.pin_bit_mask = (1ULL << LEFT_MOTOR_PIN0) | (1ULL << LEFT_MOTOR_PIN1) |
+                         (1ULL << RIGHT_MOTOR_PIN0) |
+                         (1ULL << RIGHT_MOTOR_PIN1);
+  gpio_config(&io_conf);
 }
 
 // =====================
 // Motion APIs
 // =====================
-void stop() {
-  setDuty(LEDC_CHANNEL_0, STOP_DUTY);
-  setDuty(LEDC_CHANNEL_1, STOP_DUTY);
-  setDuty(LEDC_CHANNEL_2, STOP_DUTY);
-  setDuty(LEDC_CHANNEL_3, STOP_DUTY);
-}
-
 void forward(unsigned int cm) {
   if (cm == 0)
     return;
-  allLow();
-  setDuty(LEDC_CHANNEL_0, DRIVE_DUTY); // Left Forward
-  setDuty(LEDC_CHANNEL_2,
-          DRIVE_DUTY); // Right Forward (hpointにより自動でずれる)
-
   uint32_t delay_ms = estimateTime_forward(cm);
-  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
+  multiplexDrive(delay_ms, true);
   stop();
 }
 
 void backward(unsigned int cm) {
   if (cm == 0)
     return;
-  allLow();
-  setDuty(LEDC_CHANNEL_1, DRIVE_DUTY); // Left Backward
-  setDuty(LEDC_CHANNEL_3,
-          DRIVE_DUTY); // Right Backward (hpointにより自動でずれる)
-
   uint32_t delay_ms = estimateTime_backward(cm);
-  delayWithoutCpuStop(delay_ms, machineInternalTimestamp);
+  multiplexDrive(delay_ms, false);
   stop();
 }
 
 void rightRotate(unsigned int degree) {
-  allLow();
-  setDuty(LEDC_CHANNEL_0, DRIVE_DUTY);
-  delayWithoutCpuStop(900, machineInternalTimestamp);
+  (void)degree;
+  safeAllLow();
+  gpio_set_level(LEFT_MOTOR_PIN0, 1);
+  delayWithoutCpuStop(MILL_SEC_TO_ROTATE_FOR_90, machineInternalTimestamp);
   stop();
 }
 
 void leftRotate(unsigned int degree) {
-  allLow();
-  setDuty(LEDC_CHANNEL_2, DRIVE_DUTY);
-  delayWithoutCpuStop(900, machineInternalTimestamp);
+  (void)degree;
+  safeAllLow();
+  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
+  delayWithoutCpuStop(MILL_SEC_TO_ROTATE_FOR_90, machineInternalTimestamp);
   stop();
 }
 
