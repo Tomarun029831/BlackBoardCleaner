@@ -10,6 +10,7 @@
 #include "./lib/Timestamp.hpp"
 
 /*
+let port = "COM10"; let fqbn = "esp32:esp32:esp32";
 arduino-cli compile --fqbn $fqbn ~/Documents/BlackBoardCleaner/; arduino-cli upload -p $port --fqbn $fqbn ~/Documents/BlackBoardCleaner/; plink -serial $port -sercfg 115200,8,n,1,N
 */
 
@@ -186,14 +187,32 @@ void delayWithoutCpuStop(unsigned int ms, Timestamp &ts){
 Timestamp machineInternalTimestamp;
 constexpr unsigned long one_minute_mills = 60000;
 
+#define DEBUG_MODE 1
+
+#if DEBUG_MODE
+void setup(){
+  Serial.begin(115200);
+  WheelController::setupPinMode();
+  WheelController::stop();
+
+  Serial.println("forward begin");
+  WheelController::forward(25);
+  Serial.println("rightRotate begin");
+  WheelController::rightRotate(0);
+  Serial.println("backward begin");
+  WheelController::backward(25);
+  Serial.println("leftRotate begin");
+  WheelController::leftRotate(0);
+}
+#else
 void setup() {
   Serial.begin(115200);
   WheelController::setupPinMode();
   WheelController::stop();
   // receive KICData
-  HTTPBroker::setup();
-  String receiveString = HTTPBroker::receiveString();
-  // String receiveString = "KIC:V3;31734;00500050;317351736;/";
+  // HTTPBroker::setup();
+  // String receiveString = HTTPBroker::receiveString();
+  String receiveString = "KIC:V3;31734;00500050;317351736;/";
   Serial.println(receiveString);
   kicData = KICCollection::convertToKIC(receiveString);
   if (kicData.board.height <= 0 && kicData.board.width <= 0) ESP.restart();
@@ -203,9 +222,13 @@ void setup() {
   timestamp_print(machineInternalTimestamp); // DEBUG:
   isOnceCleaned = false;
 }
+#endif
 
 unsigned long mills_on_called;
 
+#if DEBUG_MODE
+void loop(){}
+#else
 void loop() {
   char current_day_index = machineInternalTimestamp.day - '0';
   if (current_day_index - '6' == 0) {
@@ -233,3 +256,4 @@ void loop() {
   delayWithoutCpuStop(100, machineInternalTimestamp);
   timestamp_print(machineInternalTimestamp); // DEBUG:
 }
+#endif
