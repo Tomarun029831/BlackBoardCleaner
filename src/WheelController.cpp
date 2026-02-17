@@ -105,7 +105,8 @@ void setupPinMode() {
 void forward(unsigned int cm) {
   if (cm == 0)
     return;
-  uint32_t delay_ms = estimateTime_forward(cm);
+  // uint32_t delay_ms = estimateTime_forward(cm);
+  uint32_t delay_ms = 1500;
   multiplexDrive(delay_ms, true);
   stop();
 }
