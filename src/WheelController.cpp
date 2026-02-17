@@ -20,7 +20,7 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 // =====================
 // 1サイクルあたりの時間(ms)。1sで30回切り替える場合は約33msですが、
 // ここでは以前の安定値 20ms (50Hz相当) を基準にしています。
-static constexpr int MUX_STEP_MS = 33;
+static constexpr int MUX_STEP_MS = 1000;
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
 // =====================

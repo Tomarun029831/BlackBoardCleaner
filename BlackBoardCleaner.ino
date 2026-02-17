@@ -196,11 +196,11 @@ void setup(){
   WheelController::stop();
 
   Serial.println("forward begin");
-  WheelController::forward(25);
+  WheelController::forward(100);
   Serial.println("rightRotate begin");
   WheelController::rightRotate(0);
   Serial.println("backward begin");
-  WheelController::backward(25);
+  WheelController::backward(100);
   Serial.println("leftRotate begin");
   WheelController::leftRotate(0);
 }
