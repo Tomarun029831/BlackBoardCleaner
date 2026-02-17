@@ -2,6 +2,9 @@
 #include "../lib/Timestamp.hpp"
 #include <driver/gpio.h>
 
+#include <HardwareSerial.h>
+
+
 extern Timestamp machineInternalTimestamp;
 extern void delayWithoutCpuStop(unsigned int ms, Timestamp &ts);
 
@@ -20,7 +23,7 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 // =====================
 // 1サイクルあたりの時間(ms)。1sで30回切り替える場合は約33msですが、
 // ここでは以前の安定値 20ms (50Hz相当) を基準にしています。
-static constexpr int MUX_STEP_MS = 1000;
+static constexpr int MUX_STEP_MS = 250;
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
 // =====================
@@ -71,11 +74,13 @@ static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
 
   while (elapsed < total_duration_ms) {
     // --- 左モーターのみ駆動 ---
+    Serial.println("[DEBUG]left motor only");
     safeAllLow();
     gpio_set_level(left_pin, 1);
     delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
 
     // --- 右モーターのみ駆動 ---
+    Serial.println("[DEBUG]right motor only");
     safeAllLow();
     gpio_set_level(right_pin, 1);
     delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
