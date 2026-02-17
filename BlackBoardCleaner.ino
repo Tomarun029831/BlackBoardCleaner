@@ -196,13 +196,13 @@ void setup(){
   WheelController::stop();
 
   Serial.println("forward begin");
-  WheelController::forward(100);
-  Serial.println("rightRotate begin");
-  WheelController::rightRotate(0);
-  Serial.println("backward begin");
-  WheelController::backward(100);
-  Serial.println("leftRotate begin");
-  WheelController::leftRotate(0);
+
+  // Serial.println("rightRotate begin");
+  // WheelController::rightRotate(0);
+  // Serial.println("backward begin");
+  // WheelController::backward(100);
+  // Serial.println("leftRotate begin");
+  // WheelController::leftRotate(0);
 }
 #else
 void setup() {
@@ -227,7 +227,9 @@ void setup() {
 unsigned long mills_on_called;
 
 #if DEBUG_MODE
-void loop(){}
+void loop(){
+  WheelController::forward(100);
+}
 #else
 void loop() {
   char current_day_index = machineInternalTimestamp.day - '0';
