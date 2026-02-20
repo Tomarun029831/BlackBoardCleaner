@@ -1,13 +1,6 @@
 #include "../lib/WheelController.hpp"
-extern "C" {
-#include "../src/modules/kic_timestamp/kic_timestamp.h"
-}
 #include <HardwareSerial.h>
 #include <driver/gpio.h>
-
-// 外部参照する型と関数を KIC_Timestamp に合わせる
-extern KIC_Timestamp machineInternalTimestamp;
-extern "C" void delayWithoutCpuStop(unsigned int ms, KIC_Timestamp &ts);
 
 namespace WheelController {
 
@@ -22,7 +15,7 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 // =====================
 // Timing constants
 // =====================
-static constexpr int MUX_STEP_MS = 250;
+static constexpr int MUX_STEP_MS = 1000;
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
 // =====================
@@ -70,15 +63,13 @@ static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
       forward_direction ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
 
   while (elapsed < total_duration_ms) {
-    Serial.println("[DEBUG]left motor only");
     safeAllLow();
     gpio_set_level(left_pin, 1);
-    delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
+    vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
 
-    Serial.println("[DEBUG]right motor only");
     safeAllLow();
     gpio_set_level(right_pin, 1);
-    delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
+    vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
 
     elapsed += MUX_STEP_MS;
   }
@@ -95,7 +86,8 @@ void setupPinMode() {
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
   io_conf.pin_bit_mask = (1ULL << LEFT_MOTOR_PIN0) | (1ULL << LEFT_MOTOR_PIN1) |
                          (1ULL << RIGHT_MOTOR_PIN0) |
-                         (1ULL << RIGHT_MOTOR_PIN1);
+                         (1ULL << RIGHT_MOTOR_PIN1) |
+                         (1ULL << PIN_TO_WEAKUP_IC);
   gpio_config(&io_conf);
 }
 
@@ -105,7 +97,7 @@ void setupPinMode() {
 void forward(unsigned int cm) {
   if (cm == 0)
     return;
-  uint32_t delay_ms = 1500;
+  uint32_t delay_ms = cm;
   multiplexDrive(delay_ms, true);
   stop();
 }
@@ -113,7 +105,7 @@ void forward(unsigned int cm) {
 void backward(unsigned int cm) {
   if (cm == 0)
     return;
-  uint32_t delay_ms = estimateTime_backward(cm);
+  uint32_t delay_ms = cm;
   multiplexDrive(delay_ms, false);
   stop();
 }
@@ -122,7 +114,7 @@ void rightRotate(unsigned int degree) {
   (void)degree;
   safeAllLow();
   gpio_set_level(LEFT_MOTOR_PIN0, 1);
-  delayWithoutCpuStop(MILL_SEC_TO_ROTATE_FOR_90, machineInternalTimestamp);
+  vTaskDelay(pdMS_TO_TICKS(MILL_SEC_TO_ROTATE_FOR_90));
   stop();
 }
 
@@ -130,7 +122,7 @@ void leftRotate(unsigned int degree) {
   (void)degree;
   safeAllLow();
   gpio_set_level(RIGHT_MOTOR_PIN0, 1);
-  delayWithoutCpuStop(MILL_SEC_TO_ROTATE_FOR_90, machineInternalTimestamp);
+  vTaskDelay(pdMS_TO_TICKS(MILL_SEC_TO_ROTATE_FOR_90));
   stop();
 }
 

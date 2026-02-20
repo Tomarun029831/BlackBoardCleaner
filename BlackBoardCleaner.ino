@@ -19,6 +19,7 @@ arduino-cli compile --fqbn $fqbn ~/Documents/BlackBoardCleaner/; arduino-cli upl
 */
 
 // === Global States ===
+static constexpr int MILLS_TO_WEAKUP_IC = 5000;
 bool isOnceCleaned;
 String receiveString = "";
 static constexpr int machineWidth = 22;   // cm
@@ -146,43 +147,84 @@ static void AutoClean(const BoardSize boardSize) {
   WheelController::stop();
 }
 
-extern "C" void delayWithoutCpuStop(unsigned int ms, KIC_Timestamp &ts){
-  unsigned long start_mills = millis();
-  while(millis() - start_mills < ms) yield();
-  KIC_Timestamp_AddMs(&ts, ms);
+void KIC_Timestamp_Printf(KIC_Timestamp ts) {
+    if (ts.segments.is_invalid) {
+        printf("[INVALID]\n");
+        return;
+    }
+
+    uint32_t h = ts.segments.hour_min / 100;
+    uint32_t m = ts.segments.hour_min % 100;
+
+    printf("[0x%08X] Day %u, %02u:%02u:%02u.%03u %s\n",
+           ts.raw,
+           ts.segments.day,
+           h,
+           m,
+           ts.segments.second,
+           ts.segments.millisecond,
+           ts.segments.is_PM ? "PM" : "AM");
 }
 
 #define DEBUG_MODE 1
 
-#if DEBUG_MODE
-void setup(){
-  Serial.begin(115200);
-  WheelController::setupPinMode();
-  WheelController::stop();
-  Serial.println("System Ready (DEBUG)");
-
-  WheelController::forward(1500);
+void keepIcAwakeTask(void *pvParameters) {
+    while (true) {
+        gpio_set_level(PIN_TO_WEAKUP_IC, 1);
+        vTaskDelay(pdMS_TO_TICKS(50));
+        gpio_set_level(PIN_TO_WEAKUP_IC, 0);
+        vTaskDelay(pdMS_TO_TICKS(MILLS_TO_WEAKUP_IC));
+    }
 }
-#else
+
+void IRAM_ATTR onTimerUpdate(void* arg) {
+    KIC_Timestamp_AddMs(&machineInternalTimestamp, 100);
+}
+
 void setup() {
-  Serial.begin(115200);
-  WheelController::setupPinMode();
-  WheelController::stop();
+     WheelController::setupPinMode();
+     WheelController::stop();
 
-  // HTTPBroker::setup();
-  receiveString = "KIC:V3;31734;00500050;317341735;/";
+    const esp_timer_create_args_t timer_args = {
+        .callback = &onTimerUpdate,
+        .name = "clock_update"
+    };
+    esp_timer_handle_t timer_handle;
+    esp_timer_create(&timer_args, &timer_handle);
+    esp_timer_start_periodic(timer_handle, 100000);
 
-  if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
-  machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
-  isOnceCleaned = false;
-}
-#endif
+    xTaskCreatePinnedToCore(
+            keepIcAwakeTask,
+            "WakeupTask",
+            1024,
+            NULL,
+            1,
+            NULL,
+            0
+        );
 
 #if DEBUG_MODE
-void loop(){}
+    Serial.begin(115200);
+    Serial.println("System Ready (DEBUG)");
+    WheelController::forward(5000);
+#else
+    // HTTPBroker::setup();
+    // receiveString = HTTPBroker::receiveString();
+    receiveString = "KIC:V3;31734;00500050;317341735;/";
+    if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
+    machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
+    isOnceCleaned = false;
+#endif
+}
+
+#if DEBUG_MODE
+void loop(){
+  KIC_Timestamp_Printf(machineInternalTimestamp);
+}
 #else
 void loop() {
-  char current_day_char = (char)(machineInternalTimestamp.segments.day + '0');
+  static uint32_t last_min = 99;
+  uint32_t current_min = machineInternalTimestamp.segments.hour_min % 100;
 
   if (machineInternalTimestamp.segments.day == 6) {
     String newData = HTTPBroker::receiveString();
@@ -192,13 +234,12 @@ void loop() {
     }
   }
 
-  if(millis() - mills_on_called >= one_minute_mills) {
-    mills_on_called = millis();
+  if (current_min != last_min) {
     isOnceCleaned = false;
+    last_min = current_min;
   }
 
-  KIC_SchedulePtr daySchedule = find_kic_schedule(receiveString.c_str(), current_day_char);
-
+  KIC_SchedulePtr daySchedule = find_kic_schedule(receiveString.c_str(), machineInternalTimestamp.segments.day);
   if (daySchedule != KIC_SCHEDULE_NOT_FOUND && !isOnceCleaned) {
     for (size_t idx = 0; ; idx++) {
       KIC_Timestamp scheduledTime = find_kic_time_in_schedule(daySchedule, idx);
@@ -209,7 +250,6 @@ void loop() {
           machineInternalTimestamp.segments.is_PM == scheduledTime.segments.is_PM) {
 
         isOnceCleaned = true;
-        mills_on_called = millis();
 
         AutoClean(get_kic_boardsize(receiveString.c_str()));
         break;
@@ -217,6 +257,6 @@ void loop() {
     }
   }
 
-  delayWithoutCpuStop(100, machineInternalTimestamp);
+  vTaskDelay(pdMS_TO_TICKS(100));
 }
 #endif
