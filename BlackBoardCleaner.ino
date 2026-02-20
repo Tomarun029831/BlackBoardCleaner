@@ -20,22 +20,17 @@ arduino-cli compile --fqbn $fqbn ~/Documents/BlackBoardCleaner/; arduino-cli upl
 
 // === Global States ===
 bool isOnceCleaned;
-String receiveString = ""; // Parser用に生の文字列を保持
+String receiveString = "";
 static constexpr int machineWidth = 22;   // cm
 static constexpr int machineHeight = 23;  // cm
 static bool rightMoveToClean = true;
 static bool isPositionedUpper = true;
 
-KIC_Timestamp machineInternalTimestamp;
+KIC_Timestamp machineInternalTimestamp = TIMESTAMP(0, 0);
 constexpr unsigned long one_minute_mills = 60000;
 unsigned long mills_on_called;
 
 // === Functions ===
-
-/**
- * @brief 掃除実行ロジック
- * modulesのBoardSize構造体（height_cm, width_cm）を使用
- */
 static void AutoClean(const BoardSize boardSize) {
   const int heightToMove = boardSize.height_cm - machineHeight;
   int leftWidthToMove = boardSize.width_cm - machineWidth;
@@ -51,7 +46,6 @@ static void AutoClean(const BoardSize boardSize) {
   constexpr int forwardDistanceToFixPosition = 40;
   constexpr int backwardDistanceToFixPosition = 60;
 
-  // 内部の boardSize 参照箇所をすべて .height_cm / .width_cm に置換
   if(rightMoveToClean && isPositionedUpper){
     while(true){
       WheelController::forward(heightToMove);
@@ -158,7 +152,7 @@ extern "C" void delayWithoutCpuStop(unsigned int ms, KIC_Timestamp &ts){
   KIC_Timestamp_AddMs(&ts, ms);
 }
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 #if DEBUG_MODE
 void setup(){
@@ -166,14 +160,17 @@ void setup(){
   WheelController::setupPinMode();
   WheelController::stop();
   Serial.println("System Ready (DEBUG)");
+
+  WheelController::forward(1500);
 }
 #else
 void setup() {
+  Serial.begin(115200);
   WheelController::setupPinMode();
   WheelController::stop();
 
   // HTTPBroker::setup();
-  receiveString = "KIC:V3;31734;00500050;31734;/";
+  receiveString = "KIC:V3;31734;00500050;317341735;/";
 
   if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
   machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
