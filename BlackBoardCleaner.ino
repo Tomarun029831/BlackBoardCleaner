@@ -167,77 +167,58 @@ void setup(){
   WheelController::stop();
   Serial.println("System Ready (DEBUG)");
 }
-
-void loop(){
-  // デバッグ用の動作確認など
-  WheelController::forward(100);
-}
 #else
 void setup() {
-  Serial.begin(115200);
   WheelController::setupPinMode();
   WheelController::stop();
 
-  // 初期データ取得
   receiveString = "KIC:V3;31734;00500050;317351736;/";
-  
-  if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) {
-    Serial.println("KIC Syntax Error");
-    ESP.restart();
-  }
 
-  // 内部時計をサーバー時刻で初期化
+  if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
   machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
   isOnceCleaned = false;
 }
 #endif
 
-#if !DEBUG_MODE
+#if DEBUG_MODE
+void loop(){}
+#else
 void loop() {
-  // 現在の曜日インデックス取得 (0:Sun - 6:Sat)
   char current_day_char = (char)(machineInternalTimestamp.segments.day + '0');
 
-  // 土曜日（'6'）に新しいデータを取得するロジック
   if (machineInternalTimestamp.segments.day == 6) {
     String newData = HTTPBroker::receiveString();
     if (check_kic_syntax(newData.c_str()) == KIC_SYNTAX_CORRECT) {
       receiveString = newData;
-      // 時刻同期
       machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
     }
   }
 
-  // 1分経過したら「この時間の掃除は完了」フラグを落とす
   if(millis() - mills_on_called >= one_minute_mills) {
     mills_on_called = millis();
     isOnceCleaned = false;
   }
 
-  // スケジュールの確認
   KIC_SchedulePtr daySchedule = find_kic_schedule(receiveString.c_str(), current_day_char);
-  
+
   if (daySchedule != KIC_SCHEDULE_NOT_FOUND && !isOnceCleaned) {
     for (size_t idx = 0; ; idx++) {
       KIC_Timestamp scheduledTime = find_kic_time_in_schedule(daySchedule, idx);
       
-      // スケジュール末尾に到達
       if (scheduledTime.segments.is_invalid) break;
 
-      // 時刻一致判定 (AM/PM と 時:分 の一致を確認)
       if (machineInternalTimestamp.segments.hour_min == scheduledTime.segments.hour_min &&
           machineInternalTimestamp.segments.is_PM == scheduledTime.segments.is_PM) {
-        
+
         isOnceCleaned = true;
         mills_on_called = millis();
-        
-        // 最新のボードサイズを取得して実行
+
         AutoClean(get_kic_boardsize(receiveString.c_str()));
         break;
       }
     }
   }
 
-  // 100ms待機しつつ内部時計を進める
   delayWithoutCpuStop(100, machineInternalTimestamp);
 }
 #endif
