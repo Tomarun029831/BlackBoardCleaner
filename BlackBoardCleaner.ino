@@ -172,7 +172,8 @@ void setup() {
   WheelController::setupPinMode();
   WheelController::stop();
 
-  receiveString = "KIC:V3;31734;00500050;317351736;/";
+  // HTTPBroker::setup();
+  receiveString = "KIC:V3;31734;00500050;31734;/";
 
   if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
   machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
