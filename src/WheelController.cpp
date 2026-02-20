@@ -1,12 +1,13 @@
 #include "../lib/WheelController.hpp"
-#include "../lib/Timestamp.hpp"
+extern "C" {
+#include "../src/modules/kic_timestamp/kic_timestamp.h"
+}
+#include <HardwareSerial.h>
 #include <driver/gpio.h>
 
-#include <HardwareSerial.h>
-
-
-extern Timestamp machineInternalTimestamp;
-extern void delayWithoutCpuStop(unsigned int ms, Timestamp &ts);
+// 外部参照する型と関数を KIC_Timestamp に合わせる
+extern KIC_Timestamp machineInternalTimestamp;
+extern "C" void delayWithoutCpuStop(unsigned int ms, KIC_Timestamp &ts);
 
 namespace WheelController {
 
@@ -21,13 +22,11 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 // =====================
 // Timing constants
 // =====================
-// 1サイクルあたりの時間(ms)。1sで30回切り替える場合は約33msですが、
-// ここでは以前の安定値 20ms (50Hz相当) を基準にしています。
 static constexpr int MUX_STEP_MS = 250;
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
 // =====================
-// Time estimation (エラー回避のため、呼び出し元より前に配置)
+// Time estimation
 // =====================
 static uint32_t estimateTime_forward(unsigned int distance_cm) {
   if (distance_cm == 0)
@@ -51,7 +50,6 @@ static uint32_t estimateTime_backward(unsigned int distance_cm) {
 // Motor control helpers
 // =====================
 void stop() {
-  // 全ピンHighでブレーキ（ドライバの仕様に準拠）
   gpio_set_level(LEFT_MOTOR_PIN0, 1);
   gpio_set_level(LEFT_MOTOR_PIN1, 1);
   gpio_set_level(RIGHT_MOTOR_PIN0, 1);
@@ -65,7 +63,6 @@ static void safeAllLow() {
   gpio_set_level(RIGHT_MOTOR_PIN1, 0);
 }
 
-// 擬似的に両輪を動かすコアロジック (Time Division)
 static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
   uint32_t elapsed = 0;
   gpio_num_t left_pin = forward_direction ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
@@ -73,13 +70,11 @@ static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
       forward_direction ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
 
   while (elapsed < total_duration_ms) {
-    // --- 左モーターのみ駆動 ---
     Serial.println("[DEBUG]left motor only");
     safeAllLow();
     gpio_set_level(left_pin, 1);
     delayWithoutCpuStop(MUX_STEP_MS / 2, machineInternalTimestamp);
 
-    // --- 右モーターのみ駆動 ---
     Serial.println("[DEBUG]right motor only");
     safeAllLow();
     gpio_set_level(right_pin, 1);
@@ -110,7 +105,6 @@ void setupPinMode() {
 void forward(unsigned int cm) {
   if (cm == 0)
     return;
-  // uint32_t delay_ms = estimateTime_forward(cm);
   uint32_t delay_ms = 1500;
   multiplexDrive(delay_ms, true);
   stop();
