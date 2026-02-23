@@ -3,11 +3,7 @@
 #include <cmath>
 
 // === modules ===
-extern "C" {
-  #include "./src/modules/kic_timestamp/kic_timestamp.h"
-  #include "./src/modules/kic_parser/kic_parser_specifications.h"
-  #include "./src/modules/kic_parser/flyweight_kic_parser.h"
-}
+#include <kic_notation.h>
 
 // === my libs ===
 #include "./lib/WheelController.hpp"
@@ -19,7 +15,7 @@ arduino-cli compile --fqbn $fqbn ~/Documents/BlackBoardCleaner/; arduino-cli upl
 */
 
 // === Global States ===
-static constexpr int MILLS_TO_WEAKUP_IC = 5000;
+static constexpr int MILLS_TO_WEAKUP_IC = 3000;
 bool isOnceCleaned;
 String receiveString = "";
 static constexpr int machineWidth = 22;   // cm
@@ -171,7 +167,7 @@ void KIC_Timestamp_Printf(KIC_Timestamp ts) {
 void keepIcAwakeTask(void *pvParameters) {
     while (true) {
         gpio_set_level(PIN_TO_WEAKUP_IC, 1);
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(1000));
         gpio_set_level(PIN_TO_WEAKUP_IC, 0);
         vTaskDelay(pdMS_TO_TICKS(MILLS_TO_WEAKUP_IC));
     }

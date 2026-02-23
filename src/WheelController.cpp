@@ -15,6 +15,7 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 // =====================
 // Timing constants
 // =====================
+static constexpr int MUX_NEXT_STEP_MS = 100;
 static constexpr int MUX_STEP_MS = 1000;
 static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 
@@ -63,11 +64,12 @@ static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
       forward_direction ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
 
   while (elapsed < total_duration_ms) {
-    safeAllLow();
-    gpio_set_level(left_pin, 1);
-    vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
+    // safeAllLow();
+    // gpio_set_level(left_pin, 1);
+    // vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
 
     safeAllLow();
+    vTaskDelay(pdMS_TO_TICKS(MUX_NEXT_STEP_MS));
     gpio_set_level(right_pin, 1);
     vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
 
