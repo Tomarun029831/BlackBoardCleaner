@@ -1,7 +1,7 @@
 #ifndef WHEEL_CONTROLLER_H
 #define WHEEL_CONTROLLER_H
 
-#include <Arduino.h>
+#include <driver/gpio.h>
 static constexpr gpio_num_t PIN_TO_WEAKUP_IC = (gpio_num_t)27;
 
 namespace WheelController {
