@@ -1,6 +1,7 @@
 #include "../lib/WheelController.hpp"
 #include <HardwareSerial.h>
-#include <driver/gpio.h>
+#include <cstdint>
+#include <driver/ledc.h>
 
 namespace WheelController {
 
@@ -13,124 +14,156 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN0 = (gpio_num_t)26;
 static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 
 // =====================
-// Timing constants
+// PWM settings
 // =====================
-static constexpr int MUX_NEXT_STEP_MS = 100;
-static constexpr int MUX_STEP_MS = 1000;
-static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
+static constexpr ledc_timer_t LEDC_TIMER = LEDC_TIMER_0;
+static constexpr ledc_mode_t LEDC_MODE = LEDC_LOW_SPEED_MODE;
+static constexpr ledc_timer_bit_t LEDC_DUTY_RES = LEDC_TIMER_8_BIT; // 0-255
+static constexpr uint32_t LEDC_FREQ = 1000;                         // [Hz]
+
+enum MotorChannel { L0 = 0, L1, R0, R1 };
 
 // =====================
-// Time estimation
+// GPIO / PWM setup
 // =====================
-static uint32_t estimateTime_forward(const unsigned int distance_cm) {
-  if (distance_cm == 0)
-    return 0;
-  float coefficient = 139.11f;
-  float intercept = -81.33f;
-  float time_ms = (coefficient * (distance_cm + 1)) + intercept;
-  return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
-}
+void setupPinMode() {
+  ledc_timer_config_t ledc_timer = {.speed_mode = LEDC_MODE,
+                                    .duty_resolution = LEDC_DUTY_RES,
+                                    .timer_num = LEDC_TIMER,
+                                    .freq_hz = LEDC_FREQ,
+                                    .clk_cfg = LEDC_AUTO_CLK};
+  ledc_timer_config(&ledc_timer);
 
-static uint32_t estimateTime_backward(const unsigned int distance_cm) {
-  if (distance_cm == 0)
-    return 0;
-  float coefficient = 206.27f;
-  float intercept = 160.85f;
-  float time_ms = (coefficient * distance_cm) + intercept;
-  return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
+  auto config_channel = [](ledc_channel_t ch, gpio_num_t pin) {
+    ledc_channel_config_t ledc_ch = {.gpio_num = pin,
+                                     .speed_mode = LEDC_MODE,
+                                     .channel = ch,
+                                     .intr_type = LEDC_INTR_DISABLE,
+                                     .timer_sel = LEDC_TIMER,
+                                     .duty = 0,
+                                     .hpoint = 0};
+    ledc_channel_config(&ledc_ch);
+  };
+
+  config_channel(LEDC_CHANNEL_0, LEFT_MOTOR_PIN0);
+  config_channel(LEDC_CHANNEL_1, LEFT_MOTOR_PIN1);
+  config_channel(LEDC_CHANNEL_2, RIGHT_MOTOR_PIN0);
+  config_channel(LEDC_CHANNEL_3, RIGHT_MOTOR_PIN1);
 }
 
 // =====================
 // Motor control helpers
 // =====================
+static void setMotorDuty(ledc_channel_t ch, uint32_t duty) {
+  ledc_set_duty(LEDC_MODE, ch, duty);
+  ledc_update_duty(LEDC_MODE, ch);
+}
+
 void stop() {
-  gpio_set_level(LEFT_MOTOR_PIN0, 1);
-  gpio_set_level(LEFT_MOTOR_PIN1, 1);
-  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
-  gpio_set_level(RIGHT_MOTOR_PIN1, 1);
+  setMotorDuty(LEDC_CHANNEL_0, 255);
+  setMotorDuty(LEDC_CHANNEL_1, 255);
+  setMotorDuty(LEDC_CHANNEL_2, 255);
+  setMotorDuty(LEDC_CHANNEL_3, 255);
 }
 
 static void safeAllLow() {
-  gpio_set_level(LEFT_MOTOR_PIN0, 0);
-  gpio_set_level(LEFT_MOTOR_PIN1, 0);
-  gpio_set_level(RIGHT_MOTOR_PIN0, 0);
-  gpio_set_level(RIGHT_MOTOR_PIN1, 0);
+  setMotorDuty(LEDC_CHANNEL_0, 0);
+  setMotorDuty(LEDC_CHANNEL_1, 0);
+  setMotorDuty(LEDC_CHANNEL_2, 0);
+  setMotorDuty(LEDC_CHANNEL_3, 0);
 }
 
-static void multiplexDrive(const uint32_t total_duration_ms,
-                           const bool is_left_forward,
-                           const bool is_right_forward) {
-  uint32_t elapsed = 0;
-  const gpio_num_t left_pin =
-      is_left_forward ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
-  const gpio_num_t right_pin =
-      is_right_forward ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
+// =====================
+// PWM Drive Core
+// =====================
+static void drivePWM(uint32_t duration_ms, uint8_t target_duty_l,
+                     uint8_t target_duty_r, bool is_forward) {
+  safeAllLow();
 
-  while (elapsed <= total_duration_ms) {
-    safeAllLow();
-    gpio_set_level(left_pin, 1);
-    vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
+  ledc_channel_t l_ch = is_forward ? LEDC_CHANNEL_0 : LEDC_CHANNEL_1;
+  ledc_channel_t r_ch = is_forward ? LEDC_CHANNEL_2 : LEDC_CHANNEL_3;
 
-    safeAllLow();
-    vTaskDelay(pdMS_TO_TICKS(MUX_NEXT_STEP_MS));
-    gpio_set_level(right_pin, 1);
-    vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
+  const uint8_t start_duty = 120;
+  constexpr int RAMP_STEPS = 5;
+  constexpr int STEP_MS = 20;
 
-    elapsed += MUX_STEP_MS;
+  for (int i = 0; i < RAMP_STEPS; i++) {
+    uint8_t d_l = start_duty + (target_duty_l - start_duty) * i / RAMP_STEPS;
+    uint8_t d_r = start_duty + (target_duty_r - start_duty) * i / RAMP_STEPS;
+
+    if (target_duty_l < start_duty)
+      d_l = target_duty_l;
+    if (target_duty_r < start_duty)
+      d_r = target_duty_r;
+
+    setMotorDuty(l_ch, d_l);
+    setMotorDuty(r_ch, d_r);
+    vTaskDelay(pdMS_TO_TICKS(STEP_MS));
   }
-}
 
-// =====================
-// GPIO setup
-// =====================
-void setupPinMode() {
-  gpio_config_t io_conf{};
-  io_conf.intr_type = GPIO_INTR_DISABLE;
-  io_conf.mode = GPIO_MODE_OUTPUT;
-  io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-  io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-  io_conf.pin_bit_mask = (1ULL << LEFT_MOTOR_PIN0) | (1ULL << LEFT_MOTOR_PIN1) |
-                         (1ULL << RIGHT_MOTOR_PIN0) |
-                         (1ULL << RIGHT_MOTOR_PIN1) |
-                         (1ULL << PIN_TO_WEAKUP_IC); // HACK: PIN_TO_WEAKUP_IC
-  gpio_config(&io_conf);
+  setMotorDuty(l_ch, target_duty_l);
+  setMotorDuty(r_ch, target_duty_r);
+
+  uint32_t ramp_total_time = RAMP_STEPS * STEP_MS;
+  if (duration_ms > ramp_total_time) {
+    vTaskDelay(pdMS_TO_TICKS(duration_ms - ramp_total_time));
+  }
+
+  stop();
 }
 
 // =====================
 // Motion APIs
 // =====================
+static uint32_t estimateTime_forward(unsigned int distance_cm) {
+  const float coefficient = 94;
+  const float intercept = 43;
+  const float time_ms = (coefficient * distance_cm) + intercept;
+  return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
+}
+
 void forward(const unsigned int cm) {
   if (cm == 0)
     return;
-  uint32_t delay_ms = cm; // HACK:
-  multiplexDrive(delay_ms, true, true);
-  stop();
+  drivePWM(estimateTime_forward(cm), 255, 255, true);
+}
+
+static uint32_t estimateTime_backward(unsigned int distance_cm) {
+  const float coefficient = 110;
+  const float intercept = 130;
+  const float time_ms = (coefficient * distance_cm) + intercept;
+  return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
 }
 
 void backward(const unsigned int cm) {
   if (cm == 0)
     return;
-  uint32_t delay_ms = cm;
-  multiplexDrive(delay_ms, false, false);
-  stop();
+  drivePWM(estimateTime_backward(cm), 255, 255, false);
 }
 
-void rightRotate(const unsigned int degree) {
-  if (degree == 0)
-    return;
-  const unsigned int delay_ms = degree;
-  multiplexDrive(delay_ms, true, false);
-  safeAllLow();
-  stop();
+static constexpr float MAGNIFICATION = 0.6f;
+
+static void twistedDrivePWM(uint32_t total_duration_ms, bool is_forward,
+                            bool is_right) {
+  float base_max_duty = 255.0f;
+
+  float ratio_left = is_right ? MAGNIFICATION : (1.0f - MAGNIFICATION);
+  float ratio_right = is_right ? (1.0f - MAGNIFICATION) : MAGNIFICATION;
+
+  uint8_t duty_l = static_cast<uint8_t>(base_max_duty * ratio_left);
+  uint8_t duty_r = static_cast<uint8_t>(base_max_duty * ratio_right);
+  Serial.println(duty_l);
+  Serial.println(duty_r);
+
+  drivePWM(total_duration_ms, duty_l, duty_r, is_forward);
 }
 
-void leftRotate(const unsigned int degree) {
-  if (degree == 0)
-    return;
-  const unsigned int delay_ms = degree;
-  safeAllLow();
-  multiplexDrive(delay_ms, false, true);
-  stop();
-}
+void rightForwardRotate() { twistedDrivePWM(2000, true, true); }
+
+void leftForwardRotate() { twistedDrivePWM(2000, true, false); }
+
+void rightBackwardRotate() { twistedDrivePWM(2000, false, true); }
+
+void leftBackwardRotate() { twistedDrivePWM(2000, false, false); }
 
 } // namespace WheelController
