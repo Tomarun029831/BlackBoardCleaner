@@ -22,7 +22,7 @@ static constexpr int MILL_SEC_TO_ROTATE_FOR_90 = 900;
 // =====================
 // Time estimation
 // =====================
-static uint32_t estimateTime_forward(unsigned int distance_cm) {
+static uint32_t estimateTime_forward(const unsigned int distance_cm) {
   if (distance_cm == 0)
     return 0;
   float coefficient = 139.11f;
@@ -31,7 +31,7 @@ static uint32_t estimateTime_forward(unsigned int distance_cm) {
   return (time_ms < 0) ? 0 : static_cast<uint32_t>(time_ms);
 }
 
-static uint32_t estimateTime_backward(unsigned int distance_cm) {
+static uint32_t estimateTime_backward(const unsigned int distance_cm) {
   if (distance_cm == 0)
     return 0;
   float coefficient = 206.27f;
@@ -57,16 +57,17 @@ static void safeAllLow() {
   gpio_set_level(RIGHT_MOTOR_PIN1, 0);
 }
 
-static void multiplexDrive(uint32_t total_duration_ms, bool forward_direction) {
+static void multiplexDrive(const uint32_t total_duration_ms,
+                           const bool is_left_forward,
+                           const bool is_right_forward) {
   uint32_t elapsed = 0;
-  gpio_num_t left_pin = forward_direction ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
-  gpio_num_t right_pin =
-      forward_direction ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
+  gpio_num_t left_pin = is_left_forward ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
+  gpio_num_t right_pin = is_right_forward ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
 
-  while (elapsed < total_duration_ms) {
-    // safeAllLow();
-    // gpio_set_level(left_pin, 1);
-    // vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
+  while (elapsed <= total_duration_ms) {
+    safeAllLow();
+    gpio_set_level(left_pin, 1);
+    vTaskDelay(pdMS_TO_TICKS(MUX_STEP_MS / 2));
 
     safeAllLow();
     vTaskDelay(pdMS_TO_TICKS(MUX_NEXT_STEP_MS));
@@ -89,22 +90,22 @@ void setupPinMode() {
   io_conf.pin_bit_mask = (1ULL << LEFT_MOTOR_PIN0) | (1ULL << LEFT_MOTOR_PIN1) |
                          (1ULL << RIGHT_MOTOR_PIN0) |
                          (1ULL << RIGHT_MOTOR_PIN1) |
-                         (1ULL << PIN_TO_WEAKUP_IC);
+                         (1ULL << PIN_TO_WEAKUP_IC); // HACK: PIN_TO_WEAKUP_IC
   gpio_config(&io_conf);
 }
 
 // =====================
 // Motion APIs
 // =====================
-void forward(unsigned int cm) {
+void forward(const unsigned int cm) {
   if (cm == 0)
     return;
-  uint32_t delay_ms = cm;
+  uint32_t delay_ms = cm; // HACK:
   multiplexDrive(delay_ms, true);
   stop();
 }
 
-void backward(unsigned int cm) {
+void backward(const unsigned int cm) {
   if (cm == 0)
     return;
   uint32_t delay_ms = cm;
@@ -112,19 +113,19 @@ void backward(unsigned int cm) {
   stop();
 }
 
-void rightRotate(unsigned int degree) {
-  (void)degree;
+void rightRotate(const unsigned int degree) {
+  if (degree == 0)
+    return;
+  multiplexDrive(delay_ms, true, false);
   safeAllLow();
-  gpio_set_level(LEFT_MOTOR_PIN0, 1);
-  vTaskDelay(pdMS_TO_TICKS(MILL_SEC_TO_ROTATE_FOR_90));
   stop();
 }
 
-void leftRotate(unsigned int degree) {
-  (void)degree;
+void leftRotate(const unsigned int degree) {
+  if (degree == 0)
+    return;
   safeAllLow();
-  gpio_set_level(RIGHT_MOTOR_PIN0, 1);
-  vTaskDelay(pdMS_TO_TICKS(MILL_SEC_TO_ROTATE_FOR_90));
+  multiplexDrive(delay_ms, false, true);
   stop();
 }
 
