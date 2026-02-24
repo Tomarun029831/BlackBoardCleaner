@@ -61,8 +61,10 @@ static void multiplexDrive(const uint32_t total_duration_ms,
                            const bool is_left_forward,
                            const bool is_right_forward) {
   uint32_t elapsed = 0;
-  gpio_num_t left_pin = is_left_forward ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
-  gpio_num_t right_pin = is_right_forward ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
+  const gpio_num_t left_pin =
+      is_left_forward ? LEFT_MOTOR_PIN0 : LEFT_MOTOR_PIN1;
+  const gpio_num_t right_pin =
+      is_right_forward ? RIGHT_MOTOR_PIN0 : RIGHT_MOTOR_PIN1;
 
   while (elapsed <= total_duration_ms) {
     safeAllLow();
@@ -101,7 +103,7 @@ void forward(const unsigned int cm) {
   if (cm == 0)
     return;
   uint32_t delay_ms = cm; // HACK:
-  multiplexDrive(delay_ms, true);
+  multiplexDrive(delay_ms, true, true);
   stop();
 }
 
@@ -109,13 +111,14 @@ void backward(const unsigned int cm) {
   if (cm == 0)
     return;
   uint32_t delay_ms = cm;
-  multiplexDrive(delay_ms, false);
+  multiplexDrive(delay_ms, false, false);
   stop();
 }
 
 void rightRotate(const unsigned int degree) {
   if (degree == 0)
     return;
+  const unsigned int delay_ms = degree;
   multiplexDrive(delay_ms, true, false);
   safeAllLow();
   stop();
@@ -124,6 +127,7 @@ void rightRotate(const unsigned int degree) {
 void leftRotate(const unsigned int degree) {
   if (degree == 0)
     return;
+  const unsigned int delay_ms = degree;
   safeAllLow();
   multiplexDrive(delay_ms, false, true);
   stop();
