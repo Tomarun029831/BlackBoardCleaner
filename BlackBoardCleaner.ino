@@ -162,7 +162,7 @@ void KIC_Timestamp_Printf(KIC_Timestamp ts) {
            ts.segments.is_PM ? "PM" : "AM");
 }
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 void keepIcAwakeTask(void *pvParameters) {
     while (true) {
@@ -204,9 +204,9 @@ void setup() {
     Serial.println("System Ready (DEBUG)");
     WheelController::forward(5000);
 #else
-    // HTTPBroker::setup();
-    // receiveString = HTTPBroker::receiveString();
-    receiveString = "KIC:V3;31734;00500050;317341735;/";
+    HTTPBroker::setup();
+    receiveString = HTTPBroker::receiveString();
+    // receiveString = "KIC:V3;31734;00500050;317341735;/";
     if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
     machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
     isOnceCleaned = false;
