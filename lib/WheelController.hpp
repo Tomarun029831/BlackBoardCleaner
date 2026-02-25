@@ -7,8 +7,8 @@ namespace WheelController {
 void setupPinMode();
 void forward(unsigned int cm);
 void backward(unsigned int cm);
-void rightForwardRotate();
-void leftForwardRotate();
+void rightRotate();
+void leftRotate();
 void rightBackwardRotate();
 void leftBackwardRotate();
 void stop();

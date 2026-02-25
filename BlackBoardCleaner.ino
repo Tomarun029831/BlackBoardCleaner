@@ -14,11 +14,10 @@ arduino-cli compile --fqbn $fqbn ~/Documents/BlackBoardCleaner/; arduino-cli upl
 */
 
 // === Global States ===
-static constexpr int MILLS_TO_WEAKUP_IC = 3000;
 bool isOnceCleaned;
 String receiveString = "";
 static constexpr int machineWidth = 22;   // cm
-static constexpr int machineHeight = 23;  // cm
+static constexpr int machineHeight = 22;  // cm
 static bool rightMoveToClean = true;
 static bool isPositionedUpper = true;
 
@@ -27,120 +26,66 @@ constexpr unsigned long one_minute_mills = 60000;
 unsigned long mills_on_called;
 
 // === Functions ===
-// static void AutoClean(const BoardSize boardSize) {  // HACK:
-//   const int heightToMove = boardSize.height_cm - machineHeight;
-//   int leftWidthToMove = boardSize.width_cm - machineWidth;
-//
-//   if (heightToMove <= 0 || leftWidthToMove <= 0) {
-//     Serial.println("BoardSize is too small");
-//     return;
-//   }
-//
-//   constexpr int widthToMove = 11;  // 11cm
-//   constexpr int forwardDistanceToSide = 40;
-//   constexpr int backwardDistanceToSide = 40;
-//   constexpr int forwardDistanceToFixPosition = 40;
-//   constexpr int backwardDistanceToFixPosition = 60;
-//
-//   if (rightMoveToClean && isPositionedUpper) {
-//     while (true) {
-//       WheelController::forward(heightToMove);
-//       isPositionedUpper = false;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::rightRotate(1);
-//       WheelController::backward(backwardDistanceToSide);
-//       WheelController::leftRotate(1);
-//       WheelController::forward(forwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::backward(heightToMove + machineHeight / 2);
-//       isPositionedUpper = true;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::leftRotate(1);
-//       WheelController::forward(forwardDistanceToSide);
-//       WheelController::rightRotate(1);
-//       WheelController::backward(backwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::forward(heightToMove);
-//       isPositionedUpper = false;
-//     }
-//     rightMoveToClean = false;
-//   } else if (rightMoveToClean && !isPositionedUpper) {
-//     while (true) {
-//       WheelController::backward(heightToMove);
-//       isPositionedUpper = true;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::rightRotate(1);
-//       WheelController::forward(forwardDistanceToSide);
-//       WheelController::leftRotate(1);
-//       WheelController::backward(backwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::forward(heightToMove);
-//       isPositionedUpper = false;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::rightRotate(1);
-//       WheelController::backward(backwardDistanceToSide);
-//       WheelController::leftRotate(1);
-//       WheelController::forward(forwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::backward(heightToMove);
-//       isPositionedUpper = true;
-//     }
-//     rightMoveToClean = false;
-//   } else if (!rightMoveToClean && isPositionedUpper) {
-//     while (true) {
-//       WheelController::forward(heightToMove);
-//       isPositionedUpper = false;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::leftRotate(1);
-//       WheelController::backward(backwardDistanceToSide);
-//       WheelController::rightRotate(1);
-//       WheelController::forward(forwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::backward(heightToMove);
-//       isPositionedUpper = true;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::rightRotate(1);
-//       WheelController::forward(forwardDistanceToSide);
-//       WheelController::leftRotate(1);
-//       WheelController::backward(backwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::forward(heightToMove);
-//       isPositionedUpper = false;
-//     }
-//     rightMoveToClean = true;
-//   } else if (!rightMoveToClean && !isPositionedUpper) {
-//     while (true) {
-//       WheelController::backward(heightToMove);
-//       isPositionedUpper = true;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::rightRotate(1);
-//       WheelController::forward(forwardDistanceToSide);
-//       WheelController::leftRotate(1);
-//       WheelController::backward(backwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::forward(heightToMove);
-//       isPositionedUpper = false;
-//       if (leftWidthToMove <= widthToMove) break;
-//       WheelController::rightRotate(1);
-//       WheelController::backward(backwardDistanceToSide);
-//       WheelController::leftRotate(1);
-//       WheelController::forward(forwardDistanceToFixPosition);
-//       if (leftWidthToMove <= widthToMove) break;
-//       leftWidthToMove -= widthToMove;
-//       WheelController::backward(heightToMove);
-//       isPositionedUpper = true;
-//     }
-//     rightMoveToClean = true;
-//   }
-//   WheelController::stop();
-// }
+static void AutoClean(const BoardSize boardSize) {
+  const int heightToMove = boardSize.height_cm - machineHeight;
+  int leftWidthToMove = boardSize.width_cm - machineWidth;
+
+  if (heightToMove <= 0 || leftWidthToMove <= 0) {
+    return;
+  }
+
+  constexpr int widthToMove = 9;  // cm
+  constexpr int forwardDistanceToSide = 10;
+  constexpr int backwardDistanceToSide = 10;
+  constexpr int forwardDistanceToFixPosition = 10;
+  constexpr int backwardDistanceToFixPosition = 10;
+
+  while (true) {
+    // 1. Vertical Clean
+    if (isPositionedUpper) {
+      WheelController::forward(heightToMove);
+      isPositionedUpper = false;
+    } else {
+      WheelController::backward(heightToMove);
+      isPositionedUpper = true;
+    }
+
+    if (leftWidthToMove <= widthToMove) break;
+    // 2. Horizontal Shift
+    if (rightMoveToClean) {
+      if (!isPositionedUpper) {  // 下部からの右シフト
+        WheelController::rightRotate();
+        WheelController::backward(backwardDistanceToSide);
+        WheelController::leftRotate();
+        WheelController::forward(forwardDistanceToFixPosition);
+
+      } else {  // 上部からの右シフト
+        WheelController::leftRotate();
+        WheelController::forward(forwardDistanceToSide);
+        WheelController::rightRotate();
+        WheelController::backward(backwardDistanceToFixPosition);
+      }
+    } else {
+      if (!isPositionedUpper) {  // 下部からの左シフト
+        WheelController::leftRotate();
+        WheelController::backward(backwardDistanceToSide);
+        WheelController::rightRotate();
+        WheelController::forward(forwardDistanceToFixPosition);
+
+      } else {  // 上部からの左シフト
+        WheelController::rightRotate();
+        WheelController::forward(forwardDistanceToSide);
+        WheelController::leftRotate();
+        WheelController::backward(backwardDistanceToFixPosition);
+      }
+    }
+
+    leftWidthToMove -= widthToMove;
+  }
+
+  rightMoveToClean = !rightMoveToClean;
+  WheelController::stop();
+}
 
 void KIC_Timestamp_Printf(KIC_Timestamp ts) {
   if (ts.segments.is_invalid) {
@@ -161,7 +106,8 @@ void KIC_Timestamp_Printf(KIC_Timestamp ts) {
          ts.segments.is_PM ? "PM" : "AM");
 }
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
+#define WIFI_MODE 1
 
 void IRAM_ATTR onTimerUpdate(void *arg) {
   KIC_Timestamp_AddMs(&machineInternalTimestamp, 100);
@@ -180,17 +126,18 @@ void setup() {
   esp_timer_start_periodic(timer_handle, 100000);
 #if DEBUG_MODE
   Serial.begin(115200);
-  Serial.println("System Ready (DEBUG)");
-  // WheelController::rightForwardRotate();
-  // WheelController::leftForwardRotate();
-  // WheelController::rightBackwardRotate();
-  // WheelController::leftBackwardRotate();
-  WheelController::stop();
-#else
+  Serial.println("[DEBUG_MODE]");
+  AutoClean(BOARDSIZE(50, 70));
+#endif
+
+#if WIFI_MODE
+  Serial.begin(115200);
+  Serial.println("[WIFI_MODE]");
   HTTPBroker::setup();
   receiveString = HTTPBroker::receiveString();
-  // receiveString = "KIC:V3;31734;00500050;317341735;/";
-  if (check_kic_syntax(receiveString.c_str()) != KIC_SYNTAX_CORRECT) ESP.restart();
+  Serial.print("receiveString: ");
+  Serial.println(receiveString);
+  if (check_kic_syntax(receiveString.c_str()) == KIC_SYNTAX_ERROR) ESP.restart();
   machineInternalTimestamp = get_kic_timestamp(receiveString.c_str());
   isOnceCleaned = false;
 #endif

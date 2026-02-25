@@ -19,7 +19,7 @@ static constexpr gpio_num_t RIGHT_MOTOR_PIN1 = (gpio_num_t)25;
 static constexpr ledc_timer_t LEDC_TIMER = LEDC_TIMER_0;
 static constexpr ledc_mode_t LEDC_MODE = LEDC_LOW_SPEED_MODE;
 static constexpr ledc_timer_bit_t LEDC_DUTY_RES = LEDC_TIMER_8_BIT; // 0-255
-static constexpr uint32_t LEDC_FREQ = 1000;                         // [Hz]
+static constexpr uint32_t LEDC_FREQ = 500;                          // [Hz]
 
 enum MotorChannel { L0 = 0, L1, R0, R1 };
 
@@ -141,8 +141,7 @@ void backward(const unsigned int cm) {
   drivePWM(estimateTime_backward(cm), 255, 255, false);
 }
 
-static constexpr float MAGNIFICATION = 0.6f;
-
+static constexpr float MAGNIFICATION = 0.4f;
 static void twistedDrivePWM(uint32_t total_duration_ms, bool is_forward,
                             bool is_right) {
   float base_max_duty = 255.0f;
@@ -152,18 +151,47 @@ static void twistedDrivePWM(uint32_t total_duration_ms, bool is_forward,
 
   uint8_t duty_l = static_cast<uint8_t>(base_max_duty * ratio_left);
   uint8_t duty_r = static_cast<uint8_t>(base_max_duty * ratio_right);
-  Serial.println(duty_l);
-  Serial.println(duty_r);
 
-  drivePWM(total_duration_ms, duty_l, duty_r, is_forward);
+  safeAllLow();
+
+  ledc_channel_t l_ch = is_right ? LEDC_CHANNEL_0 : LEDC_CHANNEL_1;
+  ledc_channel_t r_ch = is_right ? LEDC_CHANNEL_3 : LEDC_CHANNEL_2;
+
+  const uint8_t start_duty = 120;
+  constexpr int RAMP_STEPS = 5;
+  constexpr int STEP_MS = 20;
+
+  for (int i = 0; i < RAMP_STEPS; i++) {
+    uint8_t d_l = start_duty + (duty_l - start_duty) * i / RAMP_STEPS;
+    uint8_t d_r = start_duty + (duty_r - start_duty) * i / RAMP_STEPS;
+
+    if (duty_l < start_duty)
+      d_l = duty_l;
+    if (duty_r < start_duty)
+      d_r = duty_r;
+
+    setMotorDuty(l_ch, d_l);
+    setMotorDuty(r_ch, d_r);
+    vTaskDelay(pdMS_TO_TICKS(STEP_MS));
+  }
+
+  setMotorDuty(l_ch, duty_l);
+  setMotorDuty(r_ch, duty_r);
+
+  uint32_t ramp_total_time = RAMP_STEPS * STEP_MS;
+  if (total_duration_ms > ramp_total_time) {
+    vTaskDelay(pdMS_TO_TICKS(total_duration_ms - ramp_total_time));
+  }
+
+  stop();
 }
 
-void rightForwardRotate() { twistedDrivePWM(2000, true, true); }
+void rightRotate() { twistedDrivePWM(2500, true, true); }
 
-void leftForwardRotate() { twistedDrivePWM(2000, true, false); }
+void leftRotate() { twistedDrivePWM(2000, true, false); }
 
-void rightBackwardRotate() { twistedDrivePWM(2000, false, true); }
-
-void leftBackwardRotate() { twistedDrivePWM(2000, false, false); }
+// void rightBackwardRotate() { twistedDrivePWM(2000, false, true); }
+//
+// void leftBackwardRotate() { twistedDrivePWM(2000, false, false); }
 
 } // namespace WheelController
