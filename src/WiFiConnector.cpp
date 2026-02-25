@@ -1,58 +1,38 @@
 #include "../lib/WiFiConnector.hpp"
 #include "../config.hpp"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <HardwareSerial.h>
 #include <WiFi.h>
 
 namespace WiFiConnector {
-// 1000 ms = 1 s
 constexpr unsigned long RETRY_INTERVAL_MS = 8000;
 
-void scanAPs() {
-  Serial.println("Scanning for WiFi networks...");
-
-  int n = WiFi.scanNetworks();
-  if (n == 0) {
-    Serial.println("No networks found");
-  } else {
-    Serial.print(n);
-    Serial.println(" networks found:");
-    for (int i = 0; i < n; i++) {
-      Serial.print(i + 1);
-      Serial.print(": ");
-      Serial.print(WiFi.SSID(i)); // SSID
-      Serial.print(" (RSSI: ");
-      Serial.print(WiFi.RSSI(i)); // 電波強度
-      Serial.print(") ");
-      Serial.print((WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? "Open"
-                                                              : "Encrypted");
-      Serial.println();
-    }
-  }
-  Serial.println("-----------------------");
-}
-
 void setup() {
-  // scanAPs();
-  unsigned long lastRetryTime = 0;
   WiFi.mode(WIFI_STA);
+  Serial.print("Connecting to: ");
   Serial.println(CONFIG::SSID);
-  Serial.println(CONFIG::PASSWORD);
   WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
 
+  unsigned long startAttemptTime = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print("WiFi status: ");
-    Serial.println(WiFi.status());
-    unsigned long currentMillis = millis();
+    vTaskDelay(pdMS_TO_TICKS(500));
+    Serial.print(".");
 
-    if (currentMillis - lastRetryTime >= RETRY_INTERVAL_MS) {
-      Serial.println("-- retry to connect --");
-      WiFi.disconnect(true);
+    if (millis() - startAttemptTime >= RETRY_INTERVAL_MS) {
+      Serial.println("\n[WiFi] Retry connection...");
+      WiFi.disconnect();
+      vTaskDelay(pdMS_TO_TICKS(100));
       WiFi.begin(CONFIG::SSID, CONFIG::PASSWORD);
-      // WiFi.reconnect();
-      lastRetryTime = currentMillis;
+      startAttemptTime = millis();
     }
-    delay(500);
+
+    // Serial.println(WiFi.status());
   }
+
+  Serial.println("\n[WiFi] Connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
 }
 
 bool available() { return WiFi.status() == WL_CONNECTED; }
